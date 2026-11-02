@@ -3,7 +3,7 @@
 
 > **Branch:** `kp`  
 > **Specification Reference:** [`handoff_kp3.md`](./handoff_kp3.md) (พัฒนาต่อยอดจาก [`handoff_kp2.md`](./handoff_kp2.md) และ [`handoff_kp1.md`](./handoff_kp1.md))  
-> **Live Public URL:** [https://stones-enjoying-crown-relation.trycloudflare.com](https://stones-enjoying-crown-relation.trycloudflare.com)  
+> **Live Public URL:** <a href="https://digital-threats-internet-freedom-1.vercel.app/" target="_blank">Dashboard</a>
 > **Local URL:** [http://localhost:8000](http://localhost:8000)
 
 ---
