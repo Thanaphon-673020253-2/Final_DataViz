@@ -1,6 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════
    Digital Threats & Internet Freedom Dashboard — Pastel Theme
-   Specification: handoff_kp2.md (3-Tab Architecture)
+   Specification: handoff_kp3.md (Interactive & Statistical Edition)
    ═══════════════════════════════════════════════════════════════ */
 
 :root {
@@ -15,9 +15,9 @@
     --border-light: #F2F4F4;
     --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05);
     --shadow-md: 0 4px 14px rgba(0, 0, 0, 0.04);
-    --shadow-hover: 0 6px 20px rgba(0, 0, 0, 0.08);
+    --shadow-focus: 0 0 0 2px rgba(37, 99, 235, 0.2), 0 6px 20px rgba(0, 0, 0, 0.08);
 
-    /* Pastel Palette (handoff_kp2 Section 1.1) */
+    /* Pastel Palette (handoff_kp3 Section 3.1) */
     --pastel-pink-bg: #FADBD8;
     --pastel-pink-accent: #E6B0AA;
     --pastel-pink-dark: #C0392B;
@@ -37,6 +37,10 @@
     --pastel-peach-bg: #FCF3CF;
     --pastel-peach-accent: #F7DC6F;
     --pastel-peach-dark: #D4AC0D;
+
+    /* Interactive Focus States */
+    --focus-border: #2563EB;
+    --dimmed-opacity: 0.35;
 
     /* Sizing & Radius */
     --radius: 12px;
@@ -62,7 +66,89 @@ body {
 .app-container {
     max-width: 1440px;
     margin: 0 auto;
-    padding: 24px 32px 48px;
+    padding: 20px 32px 48px;
+}
+
+/* ── Global Filter Bar (handoff_kp3 Section 1.1) ── */
+.global-filter-bar {
+    background: #FFFFFF;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius);
+    padding: 12px 20px;
+    margin-bottom: 20px;
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 14px;
+}
+
+.filter-left-controls {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.filter-pill {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--bg-card-alt);
+    border: 1px solid var(--border-color);
+    padding: 6px 14px;
+    border-radius: var(--radius-pill);
+}
+
+.filter-pill i {
+    font-size: 13px;
+    color: var(--pastel-blue-dark);
+}
+
+.filter-pill label {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+}
+
+.filter-pill select {
+    background: transparent;
+    border: none;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+    cursor: pointer;
+    outline: none;
+    font-family: inherit;
+}
+
+.active-filter-indicator {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.reset-global-btn {
+    background: var(--pastel-pink-bg);
+    color: var(--pastel-pink-dark);
+    border: 1px solid var(--pastel-pink-accent);
+    padding: 6px 14px;
+    border-radius: var(--radius-pill);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.reset-global-btn:hover {
+    background: var(--pastel-pink-accent);
+    color: #FFFFFF;
 }
 
 /* ── Top Header & Master Problem Statement ── */
@@ -74,7 +160,7 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 16px;
+    margin-bottom: 14px;
     flex-wrap: wrap;
     gap: 12px;
 }
@@ -133,7 +219,7 @@ body {
     border-color: var(--pastel-blue-accent);
 }
 
-/* Master Overarching Problem Box (handoff_kp2 Section 0) */
+/* Master Overarching Problem Box (handoff_kp3 Section 0) */
 .master-problem-box {
     background: #FFFFFF;
     border: 1px solid var(--border-color);
@@ -147,8 +233,8 @@ body {
 }
 
 .master-problem-icon {
-    width: 40px;
-    height: 40px;
+    width: 42px;
+    height: 42px;
     border-radius: 50%;
     background: var(--pastel-blue-bg);
     color: var(--pastel-blue-dark);
@@ -271,7 +357,7 @@ body {
     background: #FFFFFF;
     border: 1px solid var(--border-color);
     border-radius: var(--radius);
-    padding: 16px 20px;
+    padding: 14px 20px;
     margin-bottom: 20px;
     box-shadow: var(--shadow-sm);
     display: flex;
@@ -280,7 +366,7 @@ body {
 }
 
 .tab-problem-banner i {
-    font-size: 20px;
+    font-size: 18px;
     color: var(--text-secondary);
 }
 
@@ -324,7 +410,7 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 10px;
+    margin-bottom: 8px;
 }
 
 .kpi-card-label {
@@ -362,7 +448,18 @@ body {
     color: var(--text-secondary);
 }
 
-/* ── Chart Cards & Grids ── */
+.kpi-delta-tag {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 4px;
+    margin-left: 6px;
+}
+
+.delta-up { background: rgba(230, 176, 170, 0.3); color: var(--pastel-pink-dark); }
+.delta-down { background: rgba(125, 206, 160, 0.3); color: var(--pastel-mint-dark); }
+
+/* ── Chart Cards & Statistical Header ── */
 .chart-grid-2 {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
@@ -383,18 +480,20 @@ body {
     border-radius: var(--radius);
     padding: 20px;
     box-shadow: var(--shadow-sm);
-    transition: box-shadow 0.2s;
+    transition: box-shadow 0.2s, border-color 0.2s;
+    position: relative;
 }
 
-.chart-card:hover {
-    box-shadow: var(--shadow-md);
+.chart-card.is-active-filter {
+    border-color: var(--focus-border);
+    box-shadow: var(--shadow-focus);
 }
 
 .chart-header {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    margin-bottom: 16px;
+    margin-bottom: 14px;
     flex-wrap: wrap;
     gap: 8px;
 }
@@ -411,14 +510,44 @@ body {
     color: var(--text-secondary);
 }
 
-.chart-badge {
+.chart-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Stat Badge (handoff_kp3 Section 2.2) */
+.stat-badge {
+    padding: 4px 10px;
+    border-radius: var(--radius-pill);
+    font-size: 11px;
+    font-weight: 700;
+    background: var(--bg-card-alt);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.stat-badge i {
+    color: var(--pastel-blue-dark);
+}
+
+.reset-filter-btn {
+    display: none;
     padding: 3px 10px;
     border-radius: var(--radius-pill);
     font-size: 11px;
     font-weight: 600;
-    background: var(--bg-card-alt);
-    color: var(--text-secondary);
-    border: 1px solid var(--border-color);
+    background: var(--pastel-pink-bg);
+    color: var(--pastel-pink-dark);
+    border: 1px solid var(--pastel-pink-accent);
+    cursor: pointer;
+}
+
+.reset-filter-btn.visible {
+    display: inline-block;
 }
 
 .chart-body {
@@ -435,7 +564,7 @@ body {
     height: 440px;
 }
 
-/* ── Sparkline Micro Cards (Chart 1.3) ── */
+/* ── Sparklines Grid ── */
 .sparkline-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -455,17 +584,17 @@ body {
     font-size: 12px;
     font-weight: 700;
     color: var(--text-primary);
-    margin-bottom: 4px;
+    margin-bottom: 2px;
 }
 
 .spark-sub {
     font-size: 11px;
     color: var(--text-secondary);
-    margin-bottom: 12px;
+    margin-bottom: 10px;
 }
 
 .spark-bar-wrap {
-    height: 80px;
+    height: 75px;
     position: relative;
 }
 
@@ -480,21 +609,60 @@ body {
     background: var(--bg-card-alt);
     border-radius: var(--radius-sm);
     padding: 12px 14px;
+    position: relative;
+}
+
+.panel-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
 }
 
 .panel-label {
     font-size: 12px;
     font-weight: 700;
     color: var(--text-secondary);
-    margin-bottom: 6px;
     display: flex;
     align-items: center;
     gap: 6px;
 }
 
 .panel-chart-area {
-    height: 180px;
+    height: 175px;
     position: relative;
+}
+
+/* Stat Summary Banner (Tab 2 Section 5.1) */
+.stat-summary-banner {
+    background: #FFFFFF;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius);
+    padding: 14px 20px;
+    margin-bottom: 20px;
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.stat-item {
+    text-align: center;
+}
+
+.stat-item span {
+    font-size: 11px;
+    color: var(--text-secondary);
+    display: block;
+    margin-bottom: 2px;
+}
+
+.stat-item strong {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-primary);
 }
 
 /* ── Heatmap Matrix (Chart 3.5) ── */
@@ -522,14 +690,21 @@ body {
 }
 
 .heatmap-cell {
-    padding: 10px;
+    padding: 12px;
     text-align: center;
     border-radius: 6px;
-    font-weight: 600;
+    font-weight: 700;
     border: 1px solid var(--border-color);
+    cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s;
 }
 
-/* ── Interactive Tables ── */
+.heatmap-cell:hover {
+    transform: scale(1.04);
+    box-shadow: 0 4px 12px rgba(187, 143, 206, 0.3);
+}
+
+/* ── Interactive Tables with Data Bars ── */
 .table-card {
     background: #FFFFFF;
     border: 1px solid var(--border-color);
@@ -559,7 +734,7 @@ body {
 
 .search-box {
     position: relative;
-    min-width: 240px;
+    min-width: 260px;
 }
 
 .search-box i {
@@ -618,6 +793,26 @@ body {
 
 .data-table tr:hover td {
     background: var(--bg-main);
+}
+
+/* Data bar cell in table */
+.data-bar-cell {
+    position: relative;
+    z-index: 1;
+}
+
+.data-bar-bg {
+    position: absolute;
+    left: 0;
+    top: 6px;
+    bottom: 6px;
+    background: rgba(247, 220, 111, 0.35);
+    border-radius: 4px;
+    z-index: -1;
+}
+
+.row-high-loss td {
+    background: rgba(250, 219, 216, 0.18);
 }
 
 /* Badges */
@@ -702,7 +897,88 @@ body {
     border-color: var(--text-secondary);
 }
 
-/* ── Country Detail Box (Tab 3) ── */
+/* ── Modal Dialog for AI Case Study Drill-Down ── */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(44, 62, 80, 0.45);
+    backdrop-filter: blur(4px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.modal-overlay.open {
+    display: flex;
+}
+
+.modal-box {
+    background: #FFFFFF;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius);
+    width: 90%;
+    max-width: 680px;
+    max-height: 85vh;
+    overflow-y: auto;
+    padding: 24px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+    animation: fadeIn 0.2s ease;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.modal-header h3 {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.modal-close-btn {
+    background: none;
+    border: none;
+    font-size: 20px;
+    color: var(--text-muted);
+    cursor: pointer;
+}
+
+.case-card {
+    background: var(--bg-card-alt);
+    border-radius: var(--radius-sm);
+    padding: 14px;
+    margin-bottom: 12px;
+    border-left: 4px solid var(--pastel-lavender-accent);
+}
+
+.case-card-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+}
+
+.case-card-meta {
+    font-size: 11px;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+    display: flex;
+    gap: 12px;
+}
+
+.case-card-desc {
+    font-size: 12.5px;
+    color: var(--text-primary);
+    line-height: 1.5;
+}
+
+/* ── Country Detail Grid (Tab 3) ── */
 .country-detail-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -731,47 +1007,6 @@ body {
     color: var(--text-primary);
 }
 
-/* ── Filter Bar ── */
-.filter-bar {
-    display: flex;
-    gap: 16px;
-    flex-wrap: wrap;
-    margin-bottom: 20px;
-    padding: 12px 18px;
-    background: #FFFFFF;
-    border-radius: var(--radius);
-    border: 1px solid var(--border-color);
-    box-shadow: var(--shadow-sm);
-}
-
-.filter-group {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.filter-group label {
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--text-secondary);
-}
-
-.filter-select {
-    background: var(--bg-card-alt);
-    border: 1px solid var(--border-color);
-    color: var(--text-primary);
-    padding: 6px 12px;
-    border-radius: var(--radius-sm);
-    font-size: 13px;
-    font-family: inherit;
-    cursor: pointer;
-}
-
-.filter-select:focus {
-    outline: none;
-    border-color: var(--pastel-blue-dark);
-}
-
 /* ── Footer ── */
 .dashboard-footer {
     margin-top: 32px;
@@ -798,7 +1033,7 @@ body {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    z-index: 1000;
+    z-index: 1100;
     transition: opacity 0.4s ease;
 }
 
@@ -846,6 +1081,10 @@ body {
     }
     .country-detail-grid {
         grid-template-columns: repeat(2, 1fr);
+    }
+    .global-filter-bar {
+        flex-direction: column;
+        align-items: flex-start;
     }
 }
 

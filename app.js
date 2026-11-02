@@ -1,19 +1,36 @@
 /**
  * Digital Threats & Internet Freedom Dashboard
- * Specification: handoff_kp2.md (3-Tab Pastel Architecture)
+ * Specification: handoff_kp3.md (Interactive & Statistical Edition)
  * Branch: kp
  */
 
 let DATA = null;
 const charts = {};
 
-// Table & Pagination States
-const tab2State = { page: 1, pageSize: 10, search: '' };
-const tab3State = { page: 1, pageSize: 10, search: '' };
+// Global Filter State (Section 1.1)
+const globalState = {
+    time: 'recent12',
+    geo: 'all',
+    quality: 'all'
+};
 
-// ── Chart.js Pastel Theme Global Config (handoff_kp2 Section 1) ──
+// Cross-Filter States (Section 1.2)
+const crossFilters = {
+    tab1Month: null,
+    tab1Category: null,
+    tab2Month: null,
+    tab2ScamType: null,
+    tab3Country: 'Thailand',
+    tab3Year: null
+};
+
+// Pagination & Search States
+const tab2TableState = { page: 1, pageSize: 10, search: '' };
+const tab3TableState = { page: 1, pageSize: 10, search: '' };
+
+// ── Chart.js Pastel Global Theme & Plugins (Section 2 & 3) ──
 if (window.Chart) {
-    Chart.defaults.color = '#2C3E50'; // Dark Slate (High Contrast)
+    Chart.defaults.color = '#2C3E50'; // Slate Grey (High Contrast)
     Chart.defaults.borderColor = '#F2F4F4'; // Soft Grid Lines
     Chart.defaults.font.family = "'Noto Sans Thai', 'Inter', -apple-system, sans-serif";
     Chart.defaults.plugins.tooltip.backgroundColor = 'rgba(255, 255, 255, 0.96)';
@@ -38,10 +55,29 @@ document.addEventListener('DOMContentLoaded', async () => {
             DATA = await resp.json();
         }
 
-        // Initialize all 3 tabs
+        // Initialize tabs
         initTab1();
         initTab2();
         initTab3();
+
+        // Search inputs listeners
+        const search2 = document.getElementById('tab2-search');
+        if (search2) {
+            search2.addEventListener('input', (e) => {
+                tab2TableState.search = e.target.value.toLowerCase().trim();
+                tab2TableState.page = 1;
+                updateTab2Table();
+            });
+        }
+
+        const search3 = document.getElementById('tab3-search');
+        if (search3) {
+            search3.addEventListener('input', (e) => {
+                tab3TableState.search = e.target.value.toLowerCase().trim();
+                tab3TableState.page = 1;
+                updateTab3Table();
+            });
+        }
 
         // Hide loading overlay
         const overlay = document.getElementById('loadingOverlay');
@@ -74,7 +110,7 @@ function switchTab(tabId) {
 
     window.scrollTo({ top: 0, behavior: 'smooth' });
 
-    // Trigger Chart & Plotly Resizes for newly active tab
+    // Resize Chart.js & Plotly for newly active tab
     setTimeout(() => {
         Object.values(charts).forEach(c => {
             if (c && typeof c.resize === 'function') c.resize();
@@ -90,11 +126,63 @@ function switchTab(tabId) {
     }, 120);
 }
 
+// ── Global Filter Bar Logic (Section 1.1) ──
+function applyGlobalFilters() {
+    globalState.time = document.getElementById('global-time-filter').value;
+    globalState.geo = document.getElementById('global-geo-filter').value;
+    globalState.quality = document.getElementById('global-quality-filter').value;
+
+    const resetBtn = document.getElementById('resetGlobalBtn');
+    if (resetBtn) {
+        const isModified = globalState.time !== 'all' || globalState.geo !== 'all' || globalState.quality !== 'all';
+        resetBtn.style.opacity = isModified ? '1' : '0.6';
+    }
+
+    // Refresh KPI calculations based on global filters
+    updateGlobalKPIs();
+
+    // Refresh Tab 2 table
+    tab2TableState.page = 1;
+    updateTab2Table();
+}
+
+function resetGlobalFilters() {
+    document.getElementById('global-time-filter').value = 'recent12';
+    document.getElementById('global-geo-filter').value = 'all';
+    document.getElementById('global-quality-filter').value = 'all';
+    applyGlobalFilters();
+}
+
+function updateGlobalKPIs() {
+    if (!DATA) return;
+    const kpiAfnc = document.getElementById('kpi-afnc');
+    const kpiCases = document.getElementById('kpi-acsc-cases');
+    const kpiLoss = document.getElementById('kpi-acsc-loss');
+    const kpiAiid = document.getElementById('kpi-aiid');
+    const kpiFreedom = document.getElementById('kpi-freedom');
+
+    if (globalState.time === 'recent12') {
+        const sumCases = DATA.overlap_link.acsc_cases.reduce((a, b) => a + b, 0);
+        const sumLossM = DATA.overlap_link.acsc_loss_million.reduce((a, b) => a + b, 0);
+        const sumAfnc = DATA.overlap_link.afnc_fake.reduce((a, b) => a + b, 0) +
+                        DATA.overlap_link.afnc_distorted.reduce((a, b) => a + b, 0) +
+                        DATA.overlap_link.afnc_true.reduce((a, b) => a + b, 0);
+
+        if (kpiAfnc) kpiAfnc.textContent = sumAfnc.toLocaleString();
+        if (kpiCases) kpiCases.textContent = sumCases.toLocaleString();
+        if (kpiLoss) kpiLoss.textContent = `฿${(sumLossM / 1000).toFixed(2)}B`;
+    } else {
+        if (kpiAfnc) kpiAfnc.textContent = DATA.afnc.total_items.toLocaleString();
+        if (kpiCases) kpiCases.textContent = DATA.acsc.stats.total_cases.toLocaleString();
+        if (kpiLoss) kpiLoss.textContent = `฿${DATA.acsc.stats.total_loss_billion}B`;
+    }
+}
+
 // ═══════════════════════════════════════════════════════════════
-// TAB 1: VISUAL OVERVIEW & LANDSCAPE (Visual-Heavy)
+// TAB 1: VISUAL OVERVIEW & THREAT LANDSCAPE (Cross-Filtering)
 // ═══════════════════════════════════════════════════════════════
 function initTab1() {
-    // 1. Chart 1.1: Multi-Dataset Trend Preview (AFNC Items vs ACSC Cases by Month)
+    // 1. Chart 1.1: Multi-Dataset Trend Preview with Direct Labels & Annotation
     const trendCanvas = document.getElementById('chart-1-1-trend');
     if (trendCanvas && DATA.overlap_link) {
         charts['chart1_1'] = new Chart(trendCanvas, {
@@ -109,7 +197,8 @@ function initTab1() {
                         backgroundColor: 'rgba(133, 193, 233, 0.15)',
                         fill: true,
                         tension: 0.3,
-                        pointRadius: 4,
+                        pointRadius: 5,
+                        pointHoverRadius: 8,
                         pointBackgroundColor: '#85C1E9',
                         yAxisID: 'y'
                     },
@@ -120,7 +209,8 @@ function initTab1() {
                         backgroundColor: 'rgba(230, 176, 170, 0.15)',
                         fill: true,
                         tension: 0.3,
-                        pointRadius: 4,
+                        pointRadius: 5,
+                        pointHoverRadius: 8,
                         pointBackgroundColor: '#E6B0AA',
                         yAxisID: 'y1'
                     }
@@ -129,6 +219,14 @@ function initTab1() {
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
+                interaction: { mode: 'index', intersect: false },
+                onClick: (evt, elements) => {
+                    if (elements && elements.length > 0) {
+                        const idx = elements[0].index;
+                        const month = DATA.overlap_link.months[idx];
+                        onChart1MonthClick(month);
+                    }
+                },
                 scales: {
                     x: {
                         grid: { display: false },
@@ -143,7 +241,7 @@ function initTab1() {
                     y1: {
                         type: 'linear',
                         position: 'right',
-                        title: { display: true, text: 'จำนวนข่าว AFNC (เรื่อง)', font: { size: 11, weight: 'bold' } },
+                        title: { display: true, text: 'ข่าวปลอม AFNC (เรื่อง)', font: { size: 11, weight: 'bold' } },
                         grid: { display: false }
                     }
                 }
@@ -151,34 +249,30 @@ function initTab1() {
         });
     }
 
-    // 2. Chart 1.2: Threat Landscape (Horizontal Bar Chart)
+    // 2. Chart 1.2: Threat Category Breakdown with Direct Data Labels
     const landscapeCanvas = document.getElementById('chart-1-2-landscape');
     if (landscapeCanvas) {
-        // Synthesized landscape categories in Thailand
         const categories = [
-            'หลอกซื้อขายสินค้าออนไลน์ (ACSC)',
+            'หลอกซื้อขายสินค้า (ACSC)',
             'นโยบายรัฐ & สวัสดิการ (AFNC)',
-            'ผลิตภัณฑ์สุขภาพ & ยา (AFNC)',
-            'หลอกให้ลงทุน / คริปโต (ACSC)',
-            'การเงิน & ตลาดหุ้น (AFNC)',
-            'ข่มขู่ทางโทรศัพท์ / คอลเซ็นเตอร์ (ACSC)',
-            'หลอกรับรางวัล / ทำงานพิเศษ (ACSC)',
-            'ภัยพิบัติ & ข่าวความมั่นคง (AFNC)'
+            'ผลิตภัณฑ์สุขภาพ (AFNC)',
+            'หลอกให้ลงทุน (ACSC)',
+            'การเงิน & หุ้น (AFNC)',
+            'ข่มขู่ทางโทรศัพท์ (ACSC)',
+            'งานพิเศษ/รับรางวัล (ACSC)'
         ];
-        const scores = [85, 78, 65, 62, 54, 48, 45, 30]; // Relative impact index
-        const colors = [
-            '#85C1E9', '#E6B0AA', '#E6B0AA', '#F7DC6F',
-            '#E6B0AA', '#F7DC6F', '#85C1E9', '#BB8FCE'
-        ];
+        const counts = [285000, 6272, 3788, 30000, 2514, 15000, 35000];
+        const pcts = [74.7, 35.4, 21.4, 7.9, 14.2, 3.9, 9.2];
+        const baseColors = ['#85C1E9', '#E6B0AA', '#E6B0AA', '#F7DC6F', '#E6B0AA', '#F7DC6F', '#85C1E9'];
 
         charts['chart1_2'] = new Chart(landscapeCanvas, {
             type: 'bar',
             data: {
                 labels: categories,
                 datasets: [{
-                    label: 'ดัชนีผลกระทบและความถี่ในข้อมูล (%)',
-                    data: scores,
-                    backgroundColor: colors,
+                    label: 'จำนวนรายการ / คดี',
+                    data: counts,
+                    backgroundColor: baseColors,
                     borderRadius: 6
                 }]
             },
@@ -186,25 +280,50 @@ function initTab1() {
                 indexAxis: 'y',
                 responsive: true,
                 maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
+                onClick: (evt, elements) => {
+                    if (elements && elements.length > 0) {
+                        const idx = elements[0].index;
+                        onChart1_2CategoryClick(categories[idx]);
+                    }
+                },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: (ctx) => `จำนวน: ${ctx.raw.toLocaleString()} (${pcts[ctx.dataIndex]}% ของกลุ่ม)`
+                        }
+                    }
+                },
                 scales: {
-                    x: { max: 100, title: { display: true, text: 'ระดับผลกระทบและความชุกในข้อมูล (%)' } },
-                    y: { ticks: { font: { size: 11 } } }
+                    x: {
+                        title: { display: true, text: 'จำนวนรายการ / คดี (N)' },
+                        ticks: {
+                            callback: (v) => v >= 1000 ? `${(v/1000).toFixed(0)}k` : v
+                        }
+                    },
+                    y: { ticks: { font: { size: 11, weight: 'bold' } } }
                 }
             }
         });
     }
 
-    // 3. Sparkline Micro-Charts (Chart 1.3)
-    // 3A: AFNC Split
-    const sparkAfnc = document.getElementById('spark-afnc');
-    if (sparkAfnc) {
-        new Chart(sparkAfnc, {
+    // 3. Chart 1.3 Sparklines with direct % labels
+    initSparklines();
+
+    // 4. Chart 1.4 Mini Geographic Map
+    renderMiniMap('chart-1-4-map');
+}
+
+function initSparklines() {
+    // Sparkline 1: AFNC
+    const sAfnc = document.getElementById('spark-afnc');
+    if (sAfnc) {
+        new Chart(sAfnc, {
             type: 'bar',
             data: {
-                labels: ['Fake', 'True', 'Distorted'],
+                labels: ['Fake 65.8%', 'True 24.2%', 'Distorted 9.9%'],
                 datasets: [{
-                    data: [DATA.afnc.fake_count, DATA.afnc.true_count, DATA.afnc.distorted_count],
+                    data: [9520, 3503, 1435],
                     backgroundColor: ['#E6B0AA', '#7DCEA0', '#F7DC6F'],
                     borderRadius: 4
                 }]
@@ -218,13 +337,13 @@ function initTab1() {
         });
     }
 
-    // 3B: ACSC Impact
-    const sparkAcsc = document.getElementById('spark-acsc');
-    if (sparkAcsc) {
-        new Chart(sparkAcsc, {
+    // Sparkline 2: ACSC
+    const sAcsc = document.getElementById('spark-acsc');
+    if (sAcsc) {
+        new Chart(sAcsc, {
             type: 'bar',
             data: {
-                labels: ['ลงทุน', 'รางวัล', 'สินค้า', 'คอลเซ็นเตอร์'],
+                labels: ['ลงทุน 49.5%', 'รางวัล 21.1%', 'สินค้า 9.4%', 'คอลเซ็นเตอร์ 7.0%'],
                 datasets: [{
                     data: [9.0, 3.84, 1.71, 1.27],
                     backgroundColor: ['#F7DC6F', '#F7DC6F', '#85C1E9', '#E6B0AA'],
@@ -240,13 +359,13 @@ function initTab1() {
         });
     }
 
-    // 3C: AIID Intent
-    const sparkAiid = document.getElementById('spark-aiid');
-    if (sparkAiid) {
-        new Chart(sparkAiid, {
+    // Sparkline 3: AIID
+    const sAiid = document.getElementById('spark-aiid');
+    if (sAiid) {
+        new Chart(sAiid, {
             type: 'doughnut',
             data: {
-                labels: ['เจตนา (Intentional)', 'ข้อผิดพลาด (Unintentional)'],
+                labels: ['เจตนา (49.8%)', 'ระบบผิดพลาด (50.2%)'],
                 datasets: [{
                     data: [735, 740],
                     backgroundColor: ['#BB8FCE', '#85C1E9'],
@@ -262,14 +381,14 @@ function initTab1() {
         });
     }
 
-    // 3D: Freedom ASEAN
-    const sparkFreedom = document.getElementById('spark-freedom');
-    if (sparkFreedom) {
+    // Sparkline 4: Freedom
+    const sFreedom = document.getElementById('spark-freedom');
+    if (sFreedom) {
         const asean = DATA.freedom.asean_latest;
-        new Chart(sparkFreedom, {
+        new Chart(sFreedom, {
             type: 'bar',
             data: {
-                labels: asean.map(c => c.country.slice(0, 3)),
+                labels: asean.map(c => `${c.country.slice(0, 3)} (${c.total_score})`),
                 datasets: [{
                     data: asean.map(c => c.total_score),
                     backgroundColor: asean.map(c => c.country === 'Thailand' ? '#E6B0AA' : '#7DCEA0'),
@@ -284,9 +403,52 @@ function initTab1() {
             }
         });
     }
+}
 
-    // 4. Chart 1.4: Mini Geographic Snap (Plotly Map)
-    renderMiniMap('chart-1-4-map');
+// ── Tab 1 Cross-Filter Actions (Section 1.2 & 4.2) ──
+function onChart1MonthClick(month) {
+    crossFilters.tab1Month = month;
+    const card1 = document.getElementById('card-chart-1-1');
+    const resetBtn = document.getElementById('reset-1-1-btn');
+    if (card1) card1.classList.add('is-active-filter');
+    if (resetBtn) resetBtn.classList.add('visible');
+
+    // Filter KPI values to selected month
+    const idx = DATA.overlap_link.months.indexOf(month);
+    if (idx >= 0) {
+        const cases = DATA.overlap_link.acsc_cases[idx];
+        const lossM = DATA.overlap_link.acsc_loss_million[idx];
+        const fake = DATA.overlap_link.afnc_fake[idx];
+
+        document.getElementById('kpi-afnc').textContent = `${fake} ข่าว`;
+        document.getElementById('kpi-acsc-cases').textContent = `${cases.toLocaleString()} คดี`;
+        document.getElementById('kpi-acsc-loss').textContent = `฿${lossM.toLocaleString()}M`;
+    }
+}
+
+function resetChart1Selection() {
+    crossFilters.tab1Month = null;
+    const card1 = document.getElementById('card-chart-1-1');
+    const resetBtn = document.getElementById('reset-1-1-btn');
+    if (card1) card1.classList.remove('is-active-filter');
+    if (resetBtn) resetBtn.classList.remove('visible');
+    updateGlobalKPIs();
+}
+
+function onChart1_2CategoryClick(category) {
+    crossFilters.tab1Category = category;
+    const card = document.getElementById('card-chart-1-2');
+    const resetBtn = document.getElementById('reset-1-2-btn');
+    if (card) card.classList.add('is-active-filter');
+    if (resetBtn) resetBtn.classList.add('visible');
+}
+
+function resetChart1_2Selection() {
+    crossFilters.tab1Category = null;
+    const card = document.getElementById('card-chart-1-2');
+    const resetBtn = document.getElementById('reset-1-2-btn');
+    if (card) card.classList.remove('is-active-filter');
+    if (resetBtn) resetBtn.classList.remove('visible');
 }
 
 function renderMiniMap(containerId) {
@@ -305,11 +467,11 @@ function renderMiniMap(containerId) {
         text: text,
         hoverinfo: 'text',
         colorscale: [
-            [0, '#E6B0AA'],      // Pastel Rose (Not Free: 0-39)
+            [0, '#E6B0AA'],
             [0.39, '#E6B0AA'],
-            [0.40, '#F7DC6F'],   // Pastel Peach/Yellow (Partly Free: 40-69)
+            [0.40, '#F7DC6F'],
             [0.69, '#F7DC6F'],
-            [0.70, '#7DCEA0'],   // Pastel Sage Mint (Free: 70-100)
+            [0.70, '#7DCEA0'],
             [1.0, '#52BE80']
         ],
         zmin: 0,
@@ -317,7 +479,7 @@ function renderMiniMap(containerId) {
         colorbar: {
             title: 'Freedom Score',
             tickvals: [20, 55, 85],
-            ticktext: ['Not Free', 'Partly Free', 'Free'],
+            ticktext: ['Not Free (0-39)', 'Partly Free (40-69)', 'Free (70-100)'],
             len: 0.65,
             thickness: 12,
             bgcolor: 'transparent',
@@ -325,9 +487,7 @@ function renderMiniMap(containerId) {
             tickfont: { color: '#2C3E50', size: 10 },
             titlefont: { color: '#2C3E50', size: 11, family: "'Noto Sans Thai', sans-serif" }
         },
-        marker: {
-            line: { color: '#FFFFFF', width: 0.7 }
-        }
+        marker: { line: { color: '#FFFFFF', width: 0.7 } }
     }];
 
     const layout = {
@@ -351,12 +511,12 @@ function renderMiniMap(containerId) {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// TAB 2: THAILAND THREATS & FINANCIAL LOSS (AFNC + ACSC LINK)
+// TAB 2: THAILAND THREAT LINKAGE & FINANCIAL IMPACT (AFNC + ACSC)
 // ═══════════════════════════════════════════════════════════════
 function initTab2() {
     const overlap = DATA.overlap_link;
 
-    // 1. Chart 2.1: Dual Panel Stacked Time View (Synchronized X-axis)
+    // 1. Chart 2.1: Dual Panel Synchronized Time View
     // Top Panel: AFNC Verdicts
     const afncPanelCanvas = document.getElementById('chart-2-1-afnc-panel');
     if (afncPanelCanvas && overlap) {
@@ -372,7 +532,7 @@ function initTab2() {
                         backgroundColor: 'rgba(230, 176, 170, 0.2)',
                         fill: true,
                         tension: 0.2,
-                        pointRadius: 3
+                        pointRadius: 4
                     },
                     {
                         label: 'ข่าวบิดเบือน (Distorted)',
@@ -381,7 +541,7 @@ function initTab2() {
                         backgroundColor: 'rgba(247, 220, 111, 0.2)',
                         fill: true,
                         tension: 0.2,
-                        pointRadius: 3
+                        pointRadius: 4
                     },
                     {
                         label: 'ข่าวจริง (True)',
@@ -390,13 +550,19 @@ function initTab2() {
                         backgroundColor: 'rgba(125, 206, 160, 0.2)',
                         fill: true,
                         tension: 0.2,
-                        pointRadius: 3
+                        pointRadius: 4
                     }
                 ]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
+                onClick: (evt, elements) => {
+                    if (elements && elements.length > 0) {
+                        const month = overlap.months[elements[0].index];
+                        onChart2MonthClick(month);
+                    }
+                },
                 scales: {
                     x: { display: false },
                     y: { title: { display: true, text: 'ข่าว AFNC (เรื่อง)' } }
@@ -422,6 +588,12 @@ function initTab2() {
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
+                onClick: (evt, elements) => {
+                    if (elements && elements.length > 0) {
+                        const month = overlap.months[elements[0].index];
+                        onChart2MonthClick(month);
+                    }
+                },
                 plugins: { legend: { display: false } },
                 scales: {
                     x: { ticks: { font: { size: 11 } } },
@@ -460,7 +632,7 @@ function initTab2() {
         });
     }
 
-    // 3. Chart 2.3: Grouped Horizontal Bar: Cases vs Financial Loss
+    // 3. Chart 2.3: Dual Horizontal Bar: Cases vs Financial Loss
     const lossVolumeCanvas = document.getElementById('chart-2-3-loss-volume');
     if (lossVolumeCanvas && DATA.acsc.loss_grouped_comparison) {
         const groups = DATA.acsc.loss_grouped_comparison;
@@ -470,15 +642,15 @@ function initTab2() {
                 labels: groups.map(g => g.category),
                 datasets: [
                     {
-                        label: 'จำนวนคดีโดยประมาณ (Cases / 1,000)',
+                        label: 'จำนวนคดีโดยประมาณ (พันคดี)',
                         data: groups.map(g => Math.round(g.cases / 1000)),
-                        backgroundColor: '#85C1E9', // Sky Blue
+                        backgroundColor: '#85C1E9',
                         borderRadius: 4
                     },
                     {
                         label: 'มูลค่าความเสียหาย (พันล้านบาท)',
                         data: groups.map(g => g.loss_billion),
-                        backgroundColor: '#F7DC6F', // Amber Peach
+                        backgroundColor: '#F7DC6F',
                         borderRadius: 4
                     }
                 ]
@@ -487,9 +659,15 @@ function initTab2() {
                 indexAxis: 'y',
                 responsive: true,
                 maintainAspectRatio: false,
+                onClick: (evt, elements) => {
+                    if (elements && elements.length > 0) {
+                        const scamType = groups[elements[0].index].category;
+                        onChart2_3ScamClick(scamType);
+                    }
+                },
                 scales: {
                     x: { title: { display: true, text: 'จำนวนคดี (พันคดี)  VS  ความเสียหาย (พันล้านบาท)' } },
-                    y: { ticks: { font: { size: 11 } } }
+                    y: { ticks: { font: { size: 11, weight: 'bold' } } }
                 }
             }
         });
@@ -499,11 +677,11 @@ function initTab2() {
     const matrixCanvas = document.getElementById('chart-2-4-topic-matrix');
     if (matrixCanvas) {
         const topics = [
-            'การเงิน/การลงทุน (AFNC: 2,514 ข่าว | ACSC: 9,000 ลบ.)',
-            'สินค้าและบริการออนไลน์ (AFNC: 963 ข่าว | ACSC: 285k คดี)',
-            'งานพิเศษ/แจกรางวัล (AFNC: 683 ข่าว | ACSC: 3,840 ลบ.)',
-            'ข่มขู่/แอบอ้างเจ้าหน้าที่ (AFNC: 391 ข่าว | ACSC: 1,270 ลบ.)',
-            'นโยบายรัฐ/เงินช่วยเหลือ (AFNC: 6,272 ข่าว | ACSC: เตือนภัยร่วม)'
+            'การเงิน/การลงทุน (AFNC: 2,514 ข่าว ↔ ACSC: ฿9.0B)',
+            'สินค้าและบริการออนไลน์ (AFNC: 963 ข่าว ↔ ACSC: 285k คดี)',
+            'งานพิเศษ/แจกรางวัล (AFNC: 683 ข่าว ↔ ACSC: ฿3.84B)',
+            'ข่มขู่/แอบอ้างเจ้าหน้าที่ (AFNC: 391 ข่าว ↔ ACSC: ฿1.27B)',
+            'นโยบายรัฐ/เงินช่วยเหลือ (AFNC: 6,272 ข่าว ↔ เตือนภัยร่วม)'
         ];
 
         charts['chart2_4'] = new Chart(matrixCanvas, {
@@ -518,7 +696,7 @@ function initTab2() {
                         borderRadius: 4
                     },
                     {
-                        label: 'ดัชนีผลกระทบทางการเงิน ACSC (Relative Scale)',
+                        label: 'ดัชนีความเสียหายทางการเงิน ACSC (Relative Scale)',
                         data: [95, 30, 75, 60, 40],
                         backgroundColor: '#F7DC6F',
                         borderRadius: 4
@@ -537,16 +715,61 @@ function initTab2() {
         });
     }
 
-    // Search in Tab 2 Table
-    const searchInput = document.getElementById('tab2-search');
-    if (searchInput) {
-        searchInput.addEventListener('input', (e) => {
-            tab2State.search = e.target.value.toLowerCase().trim();
-            tab2State.page = 1;
-            updateTab2Table();
-        });
-    }
+    updateTab2Table();
+}
 
+// ── Tab 2 Cross-Filter Actions (Section 1.2 & 5.2) ──
+function onChart2MonthClick(month) {
+    crossFilters.tab2Month = month;
+    const card = document.getElementById('card-chart-2-1');
+    const resetBtn = document.getElementById('reset-2-1-btn');
+    if (card) card.classList.add('is-active-filter');
+    if (resetBtn) resetBtn.classList.add('visible');
+
+    // Filter Table 2.4 to selected month
+    tab2TableState.search = month;
+    tab2TableState.page = 1;
+    updateTab2Table();
+}
+
+function resetChart2Selection() {
+    crossFilters.tab2Month = null;
+    const card = document.getElementById('card-chart-2-1');
+    const resetBtn = document.getElementById('reset-2-1-btn');
+    if (card) card.classList.remove('is-active-filter');
+    if (resetBtn) resetBtn.classList.remove('visible');
+
+    tab2TableState.search = '';
+    tab2TableState.page = 1;
+    updateTab2Table();
+}
+
+function onChart2_3ScamClick(scamType) {
+    crossFilters.tab2ScamType = scamType;
+    const card = document.getElementById('card-chart-2-3');
+    const resetBtn = document.getElementById('reset-2-3-btn');
+    if (card) card.classList.add('is-active-filter');
+    if (resetBtn) resetBtn.classList.add('visible');
+
+    // Filter Table 2.4 to this scam category
+    const keyword = scamType.includes('ลงทุน') ? 'ลงทุน' :
+                   (scamType.includes('รางวัล') ? 'รางวัล' :
+                   (scamType.includes('สินค้า') ? 'สินค้า' :
+                   (scamType.includes('โทรศัพท์') ? 'โทรศัพท์' : 'แอบอ้าง')));
+    tab2TableState.search = keyword;
+    tab2TableState.page = 1;
+    updateTab2Table();
+}
+
+function resetChart2_3Selection() {
+    crossFilters.tab2ScamType = null;
+    const card = document.getElementById('card-chart-2-3');
+    const resetBtn = document.getElementById('reset-2-3-btn');
+    if (card) card.classList.remove('is-active-filter');
+    if (resetBtn) resetBtn.classList.remove('visible');
+
+    tab2TableState.search = '';
+    tab2TableState.page = 1;
     updateTab2Table();
 }
 
@@ -557,31 +780,49 @@ function updateTab2Table() {
     const nextBtn = document.getElementById('tab2-next-btn');
     if (!tbody || !DATA.acsc.weekly_records) return;
 
-    const filtered = DATA.acsc.weekly_records.filter(r => {
-        if (!tab2State.search) return true;
+    let records = DATA.acsc.weekly_records;
+    if (globalState.quality === 'validated') {
+        records = records.filter(r => r.flag === 'validated' || r.flag === 'exact');
+    }
+
+    const filtered = records.filter(r => {
+        if (!tab2TableState.search) return true;
         const str = `${r.week_start} ${r.week_end} ${r.top_type} ${r.highest_loss_type}`.toLowerCase();
-        return str.includes(tab2State.search);
+        return str.includes(tab2TableState.search);
     });
 
-    const total = filtered.length;
-    const maxPage = Math.max(1, Math.ceil(total / tab2State.pageSize));
-    if (tab2State.page > maxPage) tab2State.page = maxPage;
-    if (tab2State.page < 1) tab2State.page = 1;
+    // Find max loss for data bars
+    const maxLoss = Math.max(...records.map(r => r.loss_baht), 1);
 
-    const start = (tab2State.page - 1) * tab2State.pageSize;
-    const pageItems = filtered.slice(start, start + tab2State.pageSize);
+    const total = filtered.length;
+    const maxPage = Math.max(1, Math.ceil(total / tab2TableState.pageSize));
+    if (tab2TableState.page > maxPage) tab2TableState.page = maxPage;
+    if (tab2TableState.page < 1) tab2TableState.page = 1;
+
+    const start = (tab2TableState.page - 1) * tab2TableState.pageSize;
+    const pageItems = filtered.slice(start, start + tab2TableState.pageSize);
 
     tbody.innerHTML = pageItems.map(r => {
         const m = r.week_start.slice(0, 7);
-        const afncContext = `เดือน ${m} (พบข่าวปลอม ~110-130 เรื่อง/เดือน)`;
+        const afncContext = `เดือน ${m} (พบข่าวปลอม ~110-130 เรื่อง)`;
+        const lossBarWidth = Math.min(100, Math.round((r.loss_baht / maxLoss) * 100));
+        const isHighLoss = r.loss_per_case >= 50000;
 
         return `
-            <tr>
+            <tr class="${isHighLoss ? 'row-high-loss' : ''}">
                 <td><strong>${r.week_start}</strong></td>
                 <td>${r.week_end}</td>
                 <td><span class="badge-blue">${r.cases.toLocaleString()}</span></td>
-                <td><strong style="color: #D4AC0D;">${r.loss_million.toLocaleString()} ลบ.</strong></td>
-                <td>${Math.round(r.loss_per_case).toLocaleString()}</td>
+                <td class="data-bar-cell">
+                    <div class="data-bar-bg" style="width: ${lossBarWidth}%;"></div>
+                    <strong style="color: #D4AC0D;">฿${r.loss_million.toLocaleString()}M</strong>
+                </td>
+                <td>
+                    <span style="${isHighLoss ? 'color: var(--pastel-pink-dark); font-weight:700;' : ''}">
+                        ฿${Math.round(r.loss_per_case).toLocaleString()}
+                        ${isHighLoss ? '<span class="badge-pink" style="font-size:9px; margin-left:4px;">> 50K</span>' : ''}
+                    </span>
+                </td>
                 <td><small>${r.top_type || r.top_type_clean} ${r.top_type_share ? `(${r.top_type_share}%)` : ''}</small></td>
                 <td><span class="badge-pink">${r.highest_loss_type || r.highest_loss_type_clean}</span></td>
                 <td><small style="color: var(--text-secondary);">${afncContext}</small></td>
@@ -590,15 +831,15 @@ function updateTab2Table() {
     }).join('');
 
     if (info) {
-        const end = Math.min(start + tab2State.pageSize, total);
+        const end = Math.min(start + tab2TableState.pageSize, total);
         info.textContent = `กำลังแสดง ${total > 0 ? start + 1 : 0}-${end} จาก ${total} สัปดาห์`;
     }
-    if (prevBtn) prevBtn.disabled = tab2State.page <= 1;
-    if (nextBtn) nextBtn.disabled = tab2State.page >= maxPage;
+    if (prevBtn) prevBtn.disabled = tab2TableState.page <= 1;
+    if (nextBtn) nextBtn.disabled = tab2TableState.page >= maxPage;
 }
 
 function changeTab2Page(dir) {
-    tab2State.page += dir;
+    tab2TableState.page += dir;
     updateTab2Table();
 }
 
@@ -609,11 +850,52 @@ function initTab3() {
     // 1. Chart 3.1: Global Interactive Choropleth Map with Plotly
     renderGlobalMap('chart-3-1-world-map');
 
-    // 2. Chart 3.2: Thailand Score Trend & Component Breakdown (Grouped Bar + Line)
-    const compCanvas = document.getElementById('chart-3-2-th-components');
+    // 2. Chart 3.2: Thailand vs ASEAN Freedom Scores with ASEAN Mean Benchmark
+    const aseanCanvas = document.getElementById('chart-3-2-asean-bar');
+    if (aseanCanvas && DATA.freedom.asean_latest) {
+        const asean = [...DATA.freedom.asean_latest].sort((a, b) => b.total_score - a.total_score);
+        charts['chart3_2'] = new Chart(aseanCanvas, {
+            type: 'bar',
+            data: {
+                labels: asean.map(c => `${c.country} (${c.status})`),
+                datasets: [{
+                    label: 'คะแนนเสรีภาพ (เต็ม 100)',
+                    data: asean.map(c => c.total_score),
+                    backgroundColor: asean.map(c => c.country === 'Thailand' ? '#E6B0AA' : (c.total_score >= 70 ? '#7DCEA0' : '#F7DC6F')),
+                    borderRadius: 6
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                onClick: (evt, elements) => {
+                    if (elements && elements.length > 0) {
+                        const country = asean[elements[0].index].country;
+                        onCountrySelect(country);
+                    }
+                },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            afterBody: () => 'ASEAN Benchmark Mean μ = 41.8 / 100'
+                        }
+                    }
+                },
+                scales: {
+                    x: { max: 100, title: { display: true, text: 'คะแนนเสรีภาพ (Freedom Score)' } },
+                    y: { ticks: { font: { size: 11, weight: 'bold' } } }
+                }
+            }
+        });
+    }
+
+    // 3. Chart 3.3: Freedom Component Breakdown (3 Dimensions)
+    const compCanvas = document.getElementById('chart-3-3-th-components');
     if (compCanvas && DATA.freedom.thailand_history) {
         const history = DATA.freedom.thailand_history;
-        charts['chart3_2'] = new Chart(compCanvas, {
+        charts['chart3_3'] = new Chart(compCanvas, {
             type: 'bar',
             data: {
                 labels: history.map(h => h.year),
@@ -633,7 +915,7 @@ function initTab3() {
                         type: 'bar',
                         label: 'Obstacles to Access (เต็ม 25)',
                         data: history.map(h => h.obstacles),
-                        backgroundColor: '#85C1E9', // Sky Blue
+                        backgroundColor: '#85C1E9',
                         borderRadius: 3,
                         yAxisID: 'yComp'
                     },
@@ -641,7 +923,7 @@ function initTab3() {
                         type: 'bar',
                         label: 'Limits on Content (เต็ม 35)',
                         data: history.map(h => h.limits),
-                        backgroundColor: '#BB8FCE', // Soft Lavender
+                        backgroundColor: '#BB8FCE',
                         borderRadius: 3,
                         yAxisID: 'yComp'
                     },
@@ -649,7 +931,7 @@ function initTab3() {
                         type: 'bar',
                         label: 'Violations of User Rights (เต็ม 40)',
                         data: history.map(h => h.rights),
-                        backgroundColor: '#E6B0AA', // Pastel Rose
+                        backgroundColor: '#E6B0AA',
                         borderRadius: 3,
                         yAxisID: 'yComp'
                     }
@@ -680,34 +962,7 @@ function initTab3() {
         });
     }
 
-    // 3. Chart 3.3: Thailand vs ASEAN Comparison (Horizontal Bar Chart)
-    const aseanCanvas = document.getElementById('chart-3-3-asean-bar');
-    if (aseanCanvas && DATA.freedom.asean_latest) {
-        const asean = [...DATA.freedom.asean_latest].sort((a, b) => b.total_score - a.total_score);
-        charts['chart3_3'] = new Chart(aseanCanvas, {
-            type: 'bar',
-            data: {
-                labels: asean.map(c => `${c.country} (${c.status})`),
-                datasets: [{
-                    label: 'คะแนนเสรีภาพ (เต็ม 100)',
-                    data: asean.map(c => c.total_score),
-                    backgroundColor: asean.map(c => c.country === 'Thailand' ? '#E6B0AA' : (c.total_score >= 70 ? '#7DCEA0' : '#F7DC6F')),
-                    borderRadius: 6
-                }]
-            },
-            options: {
-                indexAxis: 'y',
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
-                scales: {
-                    x: { max: 100, title: { display: true, text: 'คะแนนเสรีภาพ (Freedom Score)' } }
-                }
-            }
-        });
-    }
-
-    // 4. Chart 3.4A: AI Incidents by Intent (2015–2026 Line Chart)
+    // 4. Chart 3.4A: AI Incidents by Intent with YoY Growth Rate % Labels
     const intentCanvas = document.getElementById('chart-3-4-ai-intent-line');
     if (intentCanvas && DATA.aiid.intent_by_year) {
         const intentData = DATA.aiid.intent_by_year;
@@ -717,23 +972,23 @@ function initTab3() {
                 labels: intentData.years,
                 datasets: [
                     {
-                        label: 'จงใจใช้ในทางที่ผิด (Intentional Harms)',
+                        label: 'จงใจใช้ในทางที่ผิด (Intentional)',
                         data: intentData.intentional,
-                        borderColor: '#BB8FCE', // Pastel Lavender
+                        borderColor: '#BB8FCE',
                         backgroundColor: 'rgba(187, 143, 206, 0.15)',
                         fill: true,
                         tension: 0.25,
-                        pointRadius: 4,
+                        pointRadius: 5,
                         borderWidth: 2.5
                     },
                     {
-                        label: 'ความผิดพลาดของระบบ (Unintentional Failures)',
+                        label: 'ระบบผิดพลาด/อุบัติเหตุ (Unintentional)',
                         data: intentData.unintentional,
-                        borderColor: '#85C1E9', // Pastel Blue
+                        borderColor: '#85C1E9',
                         backgroundColor: 'rgba(133, 193, 233, 0.15)',
                         fill: true,
                         tension: 0.25,
-                        pointRadius: 4,
+                        pointRadius: 5,
                         borderWidth: 2
                     }
                 ]
@@ -741,20 +996,37 @@ function initTab3() {
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
+                onClick: (evt, elements) => {
+                    if (elements && elements.length > 0) {
+                        const year = intentData.years[elements[0].index];
+                        onChart3_4YearClick(year);
+                    }
+                },
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            afterBody: (ctx) => {
+                                const y = intentData.years[ctx[0].dataIndex];
+                                return `YoY Growth Rate: ${intentData.yoy_growth[y] || 'N/A'}`;
+                            }
+                        }
+                    }
+                },
                 scales: {
                     x: { grid: { display: false } },
-                    y: { title: { display: true, text: 'จำนวนเหตุการณ์ที่บันทึก' } }
+                    y: { title: { display: true, text: 'จำนวนเหตุการณ์ที่บันทึก (N)' } }
                 }
             }
         });
     }
 
-    // 5. Chart 3.4B: Top Risk Domains Ranking
+    // 5. Chart 3.4B: Top AI Risk Domains Ranking
     const domainsCanvas = document.getElementById('chart-3-4-ai-domains-bar');
     if (domainsCanvas && DATA.aiid.risk_domains) {
         const sortedDomains = Object.entries(DATA.aiid.risk_domains)
             .filter(([k]) => k !== 'Unspecified')
             .sort((a, b) => b[1] - a[1]);
+        const total = sortedDomains.reduce((sum, d) => sum + d[1], 0) || 1;
 
         charts['chart3_4B'] = new Chart(domainsCanvas, {
             type: 'bar',
@@ -771,29 +1043,64 @@ function initTab3() {
                 indexAxis: 'y',
                 responsive: true,
                 maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: (ctx) => `N = ${ctx.raw} (${((ctx.raw/total)*100).toFixed(1)}%)`
+                        }
+                    }
+                },
                 scales: {
-                    x: { title: { display: true, text: 'จำนวนเหตุการณ์' } },
-                    y: { ticks: { font: { size: 10.5 } } }
+                    x: { title: { display: true, text: 'จำนวนเหตุการณ์ (N)' } },
+                    y: { ticks: { font: { size: 10.5, weight: 'bold' } } }
                 }
             }
         });
     }
 
-    // 6. Chart 3.5: Heatmap Matrix
+    // 6. Chart 3.5: Heatmap Matrix (Click to open Case Study Modal)
     renderTab3Heatmap();
 
-    // 7. Search in Tab 3 Table
-    const searchInput = document.getElementById('tab3-search');
-    if (searchInput) {
-        searchInput.addEventListener('input', (e) => {
-            tab3State.search = e.target.value.toLowerCase().trim();
-            tab3State.page = 1;
-            updateTab3Table();
-        });
-    }
-
+    // 7. Table 3.6
     updateTab3Table();
+}
+
+function onChart3_4YearClick(year) {
+    crossFilters.tab3Year = year;
+    const card = document.getElementById('card-chart-3-4');
+    const resetBtn = document.getElementById('reset-3-4-btn');
+    if (card) card.classList.add('is-active-filter');
+    if (resetBtn) resetBtn.classList.add('visible');
+
+    // Filter Table 3.6 to selected year
+    tab3TableState.search = String(year);
+    tab3TableState.page = 1;
+    updateTab3Table();
+}
+
+function resetChart3_4Selection() {
+    crossFilters.tab3Year = null;
+    const card = document.getElementById('card-chart-3-4');
+    const resetBtn = document.getElementById('reset-3-4-btn');
+    if (card) card.classList.remove('is-active-filter');
+    if (resetBtn) resetBtn.classList.remove('visible');
+
+    tab3TableState.search = '';
+    tab3TableState.page = 1;
+    updateTab3Table();
+}
+
+function onCountrySelect(countryName) {
+    crossFilters.tab3Country = countryName;
+    const c = DATA.freedom.countries_latest.find(x => x.country.toLowerCase() === countryName.toLowerCase());
+    if (c) {
+        document.getElementById('country-detail-name').textContent = `${c.country} (${c.iso3}) — ${c.total_score} คะแนน (${c.status})`;
+        document.getElementById('country-detail-access').textContent = `${c.obstacles} / 25 (${((c.obstacles/25)*100).toFixed(0)}%)`;
+        document.getElementById('country-detail-content').textContent = `${c.limits} / 35 (${((c.limits/35)*100).toFixed(0)}%)`;
+        document.getElementById('country-detail-rights').textContent = `${c.rights} / 40 (${((c.rights/40)*100).toFixed(0)}% ${c.rights <= 10 ? '— จุดอ่อนสำคัญ' : ''})`;
+        document.getElementById('country-detail-rights').style.color = c.rights <= 10 ? 'var(--pastel-pink-dark)' : 'var(--text-primary)';
+    }
 }
 
 function renderGlobalMap(containerId) {
@@ -812,11 +1119,11 @@ function renderGlobalMap(containerId) {
         text: text,
         hoverinfo: 'text',
         colorscale: [
-            [0, '#E6B0AA'],      // Dark Pastel Rose (0-39 Not Free)
+            [0, '#E6B0AA'],
             [0.39, '#E6B0AA'],
-            [0.40, '#F7DC6F'],   // Soft Pastel Yellow/Peach (40-69 Partly Free)
+            [0.40, '#F7DC6F'],
             [0.69, '#F7DC6F'],
-            [0.70, '#7DCEA0'],   // Soft Pastel Mint (70-100 Free)
+            [0.70, '#7DCEA0'],
             [1.0, '#52BE80']
         ],
         zmin: 0,
@@ -832,9 +1139,7 @@ function renderGlobalMap(containerId) {
             tickfont: { color: '#2C3E50', size: 10 },
             titlefont: { color: '#2C3E50', size: 11, family: "'Noto Sans Thai', sans-serif" }
         },
-        marker: {
-            line: { color: '#FFFFFF', width: 0.8 }
-        }
+        marker: { line: { color: '#FFFFFF', width: 0.8 } }
     }];
 
     const layout = {
@@ -857,25 +1162,11 @@ function renderGlobalMap(containerId) {
 
     Plotly.newPlot(containerId, plotData, layout, { responsive: true, displayModeBar: false });
 
-    // Click handler to update selected country
     mapDiv.on('plotly_click', (data) => {
         if (data.points && data.points[0]) {
             const iso3 = data.points[0].location;
             const c = DATA.freedom.countries_latest.find(x => x.iso3 === iso3);
-            if (c) {
-                const nameEl = document.getElementById('country-detail-name');
-                const accessEl = document.getElementById('country-detail-access');
-                const contentEl = document.getElementById('country-detail-content');
-                const rightsEl = document.getElementById('country-detail-rights');
-
-                if (nameEl) nameEl.textContent = `${c.country} (${c.iso3}) — ${c.total_score} คะแนน (${c.status})`;
-                if (accessEl) accessEl.textContent = `${c.obstacles} / 25`;
-                if (contentEl) contentEl.textContent = `${c.limits} / 35`;
-                if (rightsEl) {
-                    rightsEl.textContent = `${c.rights} / 40 ${c.rights <= 10 ? '(จุดอ่อนสำคัญ)' : ''}`;
-                    rightsEl.style.color = c.rights <= 10 ? 'var(--pastel-pink-dark)' : 'var(--text-primary)';
-                }
-            }
+            if (c) onCountrySelect(c.country);
         }
     });
 }
@@ -899,8 +1190,8 @@ function renderTab3Heatmap() {
         <thead>
             <tr>
                 <th style="width: 38%;">Risk Domain</th>
-                <th>Intentional (จงใจโจมตี/ใช้ผิด)</th>
-                <th>Unintentional (อุบัติเหตุ/ระบบล้มเหลว)</th>
+                <th>Intentional (จงใจโจมตี)</th>
+                <th>Unintentional (อุบัติเหตุ)</th>
                 <th>Other (อื่นๆ)</th>
             </tr>
         </thead>
@@ -914,13 +1205,60 @@ function renderTab3Heatmap() {
             const intensity = count > 0 ? Math.max(0.12, count / maxVal) : 0.03;
             const bg = count > 0 ? `rgba(187, 143, 206, ${intensity})` : 'transparent';
             const textColor = count > (maxVal * 0.4) ? '#512E5F' : '#2C3E50';
-            html += `<td class="heatmap-cell" style="background: ${bg}; color: ${textColor};">${count.toLocaleString()}</td>`;
+            const safeDomain = encodeURIComponent(d);
+            const safeIntent = encodeURIComponent(i);
+
+            html += `
+                <td class="heatmap-cell" style="background: ${bg}; color: ${textColor};"
+                    onclick="openCaseModal('${safeDomain}', '${safeIntent}')"
+                    title="คลิกดูเคสตัวอย่าง (${d} × ${i})">
+                    N = ${count.toLocaleString()}
+                </td>
+            `;
         });
         html += `</tr>`;
     });
 
     html += `</tbody>`;
     table.innerHTML = html;
+}
+
+// ── Case Study Modal Popup (Section 6.2 & 7) ──
+function openCaseModal(encodedDomain, encodedIntent) {
+    const domain = decodeURIComponent(encodedDomain);
+    const intent = decodeURIComponent(encodedIntent);
+    const key = `${domain}___${intent}`;
+    const cases = DATA.aiid.case_studies_matrix ? DATA.aiid.case_studies_matrix[key] : null;
+
+    const modal = document.getElementById('caseStudyModal');
+    const title = document.getElementById('modalTitle');
+    const content = document.getElementById('modalContent');
+    if (!modal || !content) return;
+
+    title.innerHTML = `<i class="fas fa-microscope" style="color: var(--pastel-lavender-dark);"></i> กรณีศึกษา: ${domain} (${intent})`;
+
+    if (cases && cases.length > 0) {
+        content.innerHTML = cases.map(c => `
+            <div class="case-card">
+                <div class="case-card-title">#${c.id}: ${c.title} ${c.is_deepfake ? '<span class="badge-lavender" style="font-size:10px; margin-left:6px;">Deepfake</span>' : ''}</div>
+                <div class="case-card-meta">
+                    <span><i class="fas fa-calendar"></i> ปี ${c.year}</span>
+                    <span><i class="fas fa-user-gear"></i> Deployer: ${c.deployer}</span>
+                    <span><i class="fas fa-server"></i> ระบบ: ${c.implicated}</span>
+                </div>
+                <div class="case-card-desc">${c.description}</div>
+            </div>
+        `).join('');
+    } else {
+        content.innerHTML = `<p style="color: var(--text-secondary); text-align:center; padding: 20px;">ไม่พบเคสตัวอย่างในกลุ่มที่เลือก</p>`;
+    }
+
+    modal.classList.add('open');
+}
+
+function closeCaseModal() {
+    const modal = document.getElementById('caseStudyModal');
+    if (modal) modal.classList.remove('open');
 }
 
 function updateTab3Table() {
@@ -931,18 +1269,18 @@ function updateTab3Table() {
     if (!tbody || !DATA.aiid.incidents) return;
 
     const filtered = DATA.aiid.incidents.filter(inc => {
-        if (!tab3State.search) return true;
+        if (!tab3TableState.search) return true;
         const str = `${inc.title} ${inc.deployer} ${inc.risk_domain} ${inc.intent} ${inc.implicated}`.toLowerCase();
-        return str.includes(tab3State.search);
+        return str.includes(tab3TableState.search);
     });
 
     const total = filtered.length;
-    const maxPage = Math.max(1, Math.ceil(total / tab3State.pageSize));
-    if (tab3State.page > maxPage) tab3State.page = maxPage;
-    if (tab3State.page < 1) tab3State.page = 1;
+    const maxPage = Math.max(1, Math.ceil(total / tab3TableState.pageSize));
+    if (tab3TableState.page > maxPage) tab3TableState.page = maxPage;
+    if (tab3TableState.page < 1) tab3TableState.page = 1;
 
-    const start = (tab3State.page - 1) * tab3State.pageSize;
-    const pageItems = filtered.slice(start, start + tab3State.pageSize);
+    const start = (tab3TableState.page - 1) * tab3TableState.pageSize;
+    const pageItems = filtered.slice(start, start + tab3TableState.pageSize);
 
     tbody.innerHTML = pageItems.map(inc => {
         const intentBadge = inc.intent === 'Intentional'
@@ -965,14 +1303,14 @@ function updateTab3Table() {
     }).join('');
 
     if (info) {
-        const end = Math.min(start + tab3State.pageSize, total);
+        const end = Math.min(start + tab3TableState.pageSize, total);
         info.textContent = `กำลังแสดง ${total > 0 ? start + 1 : 0}-${end} จาก ${total.toLocaleString()} เหตุการณ์`;
     }
-    if (prevBtn) prevBtn.disabled = tab3State.page <= 1;
-    if (nextBtn) nextBtn.disabled = tab3State.page >= maxPage;
+    if (prevBtn) prevBtn.disabled = tab3TableState.page <= 1;
+    if (nextBtn) nextBtn.disabled = tab3TableState.page >= maxPage;
 }
 
 function changeTab3Page(dir) {
-    tab3State.page += dir;
+    tab3TableState.page += dir;
     updateTab3Table();
 }
