@@ -1,0 +1,1156 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digital Threats & Internet Freedom Dashboard</title>
+    <!-- Chart.js & Plugins -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+    <!-- Plotly for World Choropleth Map -->
+    <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+    <!-- Fonts & Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Sidebar Navigation -->
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="logo">
+                <i class="fas fa-shield-halved"></i>
+                <span>Digital Threats</span>
+            </div>
+        </div>
+        <ul class="nav-menu">
+            <li class="nav-item active" data-page="overview">
+                <i class="fas fa-chart-pie"></i>
+                <span>ภาพรวมภัยคุกคาม</span>
+            </li>
+            <li class="nav-item" data-page="fakenews">
+                <i class="fas fa-newspaper"></i>
+                <span>ข่าวปลอม (AFNC)</span>
+            </li>
+            <li class="nav-item" data-page="scams">
+                <i class="fas fa-user-secret"></i>
+                <span>หลอกลวงออนไลน์ (ACSC)</span>
+            </li>
+            <li class="nav-item" data-page="ai-risks">
+                <i class="fas fa-robot"></i>
+                <span>ความเสี่ยง AI (AIID)</span>
+            </li>
+            <li class="nav-item" data-page="freedom">
+                <i class="fas fa-globe"></i>
+                <span>เสรีภาพเน็ต (Freedom)</span>
+            </li>
+            <li class="nav-item" data-page="final-insights">
+                <i class="fas fa-lightbulb"></i>
+                <span>บทสรุป & ข้อเสนอแนะ</span>
+            </li>
+        </ul>
+        <div class="sidebar-footer">
+            <p>Data Visualization Project</p>
+            <p class="text-muted">Digital Threats & Internet Freedom</p>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content" id="mainContent">
+        <!-- Top Bar -->
+        <header class="topbar">
+            <button class="menu-toggle" id="menuToggle" aria-label="Toggle menu">
+                <i class="fas fa-bars"></i>
+            </button>
+            <h1 id="pageTitle">ภาพรวมภัยคุกคามทางดิจิทัล</h1>
+            <div class="topbar-actions">
+                <span class="badge"><i class="fas fa-code-branch"></i> kp</span>
+            </div>
+        </header>
+
+        <!-- Loading Overlay -->
+        <div class="loading-overlay" id="loadingOverlay">
+            <div class="spinner"></div>
+            <p>กำลังโหลดและประมวลผลข้อมูล...</p>
+        </div>
+
+        <!-- ======================== PAGE 1: OVERVIEW ======================== -->
+        <section class="page active" id="page-overview">
+            <div class="page-header">
+                <h2>ภาพรวมภัยคุกคามทางดิจิทัลและเสรีภาพอินเทอร์เน็ต</h2>
+                <p class="subtitle">การวิเคราะห์แบบสหวิทยาการจาก 4 ฐานข้อมูลหลัก: AFNC, ACSC, AI Incident Database และ Freedom on the Net</p>
+            </div>
+
+            <!-- KPI Grid (Section 2.1) -->
+            <div class="kpi-grid">
+                <div class="kpi-card kpi-red">
+                    <div class="kpi-icon"><i class="fas fa-newspaper"></i></div>
+                    <div class="kpi-content">
+                        <span class="kpi-value" id="kpi-fakenews">17,726</span>
+                        <span class="kpi-label">ข้อมูลที่ถูกตรวจสอบ</span>
+                        <span class="kpi-source">AFNC | 2019–2026</span>
+                    </div>
+                </div>
+                <div class="kpi-card kpi-orange">
+                    <div class="kpi-icon"><i class="fas fa-exclamation-triangle"></i></div>
+                    <div class="kpi-content">
+                        <span class="kpi-value" id="kpi-fakerate">65.8%</span>
+                        <span class="kpi-label">สัดส่วนข่าวปลอม (Fake)</span>
+                        <span class="kpi-source">AFNC | 9,520 ข่าว</span>
+                    </div>
+                </div>
+                <div class="kpi-card kpi-purple">
+                    <div class="kpi-icon"><i class="fas fa-user-secret"></i></div>
+                    <div class="kpi-content">
+                        <span class="kpi-value" id="kpi-scamcases">381,390</span>
+                        <span class="kpi-label">คดีหลอกลวงออนไลน์</span>
+                        <span class="kpi-source">ACSC | รวม 48 สัปดาห์</span>
+                    </div>
+                </div>
+                <div class="kpi-card kpi-green">
+                    <div class="kpi-icon"><i class="fas fa-money-bill-wave"></i></div>
+                    <div class="kpi-content">
+                        <span class="kpi-value" id="kpi-scamdamage">18.18 พันลบ.</span>
+                        <span class="kpi-label">มูลค่าความเสียหายรวม</span>
+                        <span class="kpi-source">ACSC | ~378.7 ลบ./สัปดาห์</span>
+                    </div>
+                </div>
+                <div class="kpi-card kpi-blue">
+                    <div class="kpi-icon"><i class="fas fa-robot"></i></div>
+                    <div class="kpi-content">
+                        <span class="kpi-value" id="kpi-aiincidents">1,775</span>
+                        <span class="kpi-label">เหตุการณ์ความเสี่ยง AI</span>
+                        <span class="kpi-source">AIID | ทั่วโลก 1983–2026</span>
+                    </div>
+                </div>
+                <div class="kpi-card kpi-teal">
+                    <div class="kpi-icon"><i class="fas fa-globe"></i></div>
+                    <div class="kpi-content">
+                        <span class="kpi-value" id="kpi-thscore">39 / 100</span>
+                        <span class="kpi-label">คะแนนเสรีภาพเน็ตไทย</span>
+                        <span class="kpi-source">Freedom House | สถานะ "ไม่เสรี"</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Threat Landscape Navigation Cards (Section 2.2) -->
+            <div class="threat-landscape-grid">
+                <div class="threat-card">
+                    <div class="threat-card-top">
+                        <div class="threat-card-header">
+                            <i class="fas fa-newspaper" style="color: var(--accent-red);"></i>
+                            <span class="threat-badge">AFNC Thailand</span>
+                        </div>
+                        <h3 class="threat-title">ข่าวปลอมและข้อมูลบิดเบือน</h3>
+                        <p class="threat-desc">ข้อมูลที่ถูกหยิบยกขึ้นมาตรวจสอบโดยศูนย์ต่อต้านข่าวปลอม ส่วนใหญ่เป็นข่าวนโยบายรัฐและสุขภาพ</p>
+                    </div>
+                    <div>
+                        <div class="threat-metric">
+                            <span class="threat-metric-value" style="color: var(--accent-red);">65.8%</span>
+                            <span class="threat-metric-label">เป็นข่าวปลอมจริงจากที่ตรวจสอบ</span>
+                        </div>
+                        <button class="threat-btn" onclick="navigateToPage('fakenews')">สำรวจข้อมูลข่าวปลอม <i class="fas fa-arrow-right"></i></button>
+                    </div>
+                </div>
+
+                <div class="threat-card">
+                    <div class="threat-card-top">
+                        <div class="threat-card-header">
+                            <i class="fas fa-user-secret" style="color: var(--accent-orange);"></i>
+                            <span class="threat-badge">ACSC Thailand</span>
+                        </div>
+                        <h3 class="threat-title">การหลอกลวงออนไลน์</h3>
+                        <p class="threat-desc">สถิติคดีและมูลค่าความเสียหายรายสัปดาห์ พบการหลอกขายสินค้าคดีเยอะที่สุด แต่หลอกลงทุนเสียหายสูงที่สุด</p>
+                    </div>
+                    <div>
+                        <div class="threat-metric">
+                            <span class="threat-metric-value" style="color: var(--accent-orange);">18,177 ลบ.</span>
+                            <span class="threat-metric-label">มูลค่าความเสียหายรวมใน 48 สัปดาห์</span>
+                        </div>
+                        <button class="threat-btn" onclick="navigateToPage('scams')">สำรวจข้อมูลหลอกลวง <i class="fas fa-arrow-right"></i></button>
+                    </div>
+                </div>
+
+                <div class="threat-card">
+                    <div class="threat-card-top">
+                        <div class="threat-card-header">
+                            <i class="fas fa-robot" style="color: var(--accent-blue);"></i>
+                            <span class="threat-badge">AI Incident Database</span>
+                        </div>
+                        <h3 class="threat-title">ความเสี่ยงจาก AI</h3>
+                        <p class="threat-desc">ฐานข้อมูลระดับโลกเกี่ยวกับความล้มเหลวและการนำ AI ไปใช้ในทางที่ผิด พุ่งสูงขึ้นอย่างก้าวกระโดดตั้งแต่ปี 2022</p>
+                    </div>
+                    <div>
+                        <div class="threat-metric">
+                            <span class="threat-metric-value" style="color: var(--accent-blue);">567 กรณี</span>
+                            <span class="threat-metric-label">เหตุการณ์ที่เกี่ยวข้องกับ Deepfake/เสียงสังเคราะห์</span>
+                        </div>
+                        <button class="threat-btn" onclick="navigateToPage('ai-risks')">สำรวจความเสี่ยง AI <i class="fas fa-arrow-right"></i></button>
+                    </div>
+                </div>
+
+                <div class="threat-card">
+                    <div class="threat-card-top">
+                        <div class="threat-card-header">
+                            <i class="fas fa-globe" style="color: var(--accent-teal);"></i>
+                            <span class="threat-badge">Freedom House</span>
+                        </div>
+                        <h3 class="threat-title">เสรีภาพอินเทอร์เน็ต</h3>
+                        <p class="threat-desc">ประเมินสภาพแวดล้อมสิทธิเสรีภาพบนโลกดิจิทัล ประเทศไทยจัดอยู่ในกลุ่ม Not Free โดยมีคะแนนสิทธิผู้ใช้ต่ำที่สุด</p>
+                    </div>
+                    <div>
+                        <div class="threat-metric">
+                            <span class="threat-metric-value" style="color: var(--accent-teal);">8 / 40 คะแนน</span>
+                            <span class="threat-metric-label">คะแนนด้านสิทธิผู้ใช้งาน (User Rights) ของไทย</span>
+                        </div>
+                        <button class="threat-btn" onclick="navigateToPage('freedom')">สำรวจเสรีภาพเน็ต <i class="fas fa-arrow-right"></i></button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Key Trend Preview (Section 2.3) -->
+            <div class="chart-grid-1">
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                            <div>
+                                <h3>แนวโน้มสำคัญในมิติต่างๆ (Key Trend Preview)</h3>
+                                <span class="chart-source">เลือกสลับเพื่อดูแนวโน้มตามลำดับเวลาของแต่ละชุดข้อมูล</span>
+                            </div>
+                            <div class="trend-header-tabs">
+                                <button class="tab-btn active" onclick="switchOverviewTrend('acsc')">คดีหลอกลวงออนไลน์ (ACSC)</button>
+                                <button class="tab-btn" onclick="switchOverviewTrend('afnc')">การตรวจสอบข่าวปลอม (AFNC)</button>
+                                <button class="tab-btn" onclick="switchOverviewTrend('aiid')">เหตุการณ์ AI ทั่วโลก (AIID)</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="chart-body chart-tall">
+                        <canvas id="overview-trend-preview"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Overview Charts Grid -->
+            <div class="chart-grid-2">
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>สัดส่วนผลการตรวจสอบข่าว (AFNC)</h3>
+                        <span class="chart-source">จากข้อมูลที่ถูกส่งตรวจสอบ 14,458 ข่าว</span>
+                    </div>
+                    <div class="chart-body">
+                        <canvas id="overview-verdict-pie"></canvas>
+                    </div>
+                </div>
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>ประเภทความเสี่ยง AI ที่พบบ่อย (AIID)</h3>
+                        <span class="chart-source">การจัดหมวดหมู่ความเสี่ยงระดับโลก</span>
+                    </div>
+                    <div class="chart-body">
+                        <canvas id="overview-airisk-bar"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="chart-grid-2">
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>มูลค่าความเสียหายจากคดีหลอกลวงรายสัปดาห์ (ACSC)</h3>
+                        <span class="chart-source">หน่วย: ล้านบาท (รวม 48 สัปดาห์)</span>
+                    </div>
+                    <div class="chart-body">
+                        <canvas id="overview-scam-damage"></canvas>
+                    </div>
+                </div>
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>คะแนนเสรีภาพอินเทอร์เน็ต — ไทยกับอาเซียน (2024)</h3>
+                        <span class="chart-source">Freedom House (คะแนนเต็ม 100)</span>
+                    </div>
+                    <div class="chart-body">
+                        <canvas id="overview-freedom-bar"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Key Insights (Section 2.4) -->
+            <div class="insights-section">
+                <h3><i class="fas fa-lightbulb"></i> ข้อค้นพบสังเคราะห์จากข้อมูลจริง (Key Insights)</h3>
+                <div class="insight-cards" id="overview-insights">
+                    <div class="insight-card">
+                        <strong>1. สัดส่วนข่าวปลอมสูงแต่กระจุกตัว:</strong> ในข้อมูล AFNC พบว่ากว่า 65.8% ของข่าวที่ถูกตรวจสอบเป็นข่าวปลอมจริง โดยหมวดหมู่ที่ถูกกุเรื่องขึ้นมากที่สุดคือนโยบายภาครัฐและสุขภาพ
+                    </div>
+                    <div class="insight-card">
+                        <strong>2. Volume vs Value ในคดีหลอกลวง:</strong> ข้อมูล ACSC บ่งชี้ชัดเจนว่า "หลอกซื้อขายสินค้าออนไลน์" มีจำนวนคดีมากที่สุด (>70% ของคดี) แต่ "หลอกลงทุน" สร้างความเสียหายทางการเงินสูงที่สุด
+                    </div>
+                    <div class="insight-card">
+                        <strong>3. การก้าวกระโดดของภัย AI และ Deepfake:</strong> ฐานข้อมูล AIID บันทึกเหตุการณ์พุ่งสูงขึ้นอย่างชัดเจนหลังปี 2022 โดยภัยอันดับ 1 คือการนำ AI ไปใช้โดยผู้ไม่หวังดี (Malicious Misuse)
+                    </div>
+                    <div class="insight-card">
+                        <strong>4. ข้อจำกัดด้านสิทธิเสรีภาพ:</strong> ไทยมีคะแนนเสรีภาพเน็ต 39/100 (Not Free) ต่อเนื่องหลายปี โดยเฉพาะมิติการคุ้มครองสิทธิผู้ใช้งาน (User Rights) ที่ได้เพียง 8 จาก 40 คะแนน
+                    </div>
+                </div>
+            </div>
+
+            <!-- Data Quality & Inventory (Section 13) -->
+            <div class="inventory-section">
+                <div class="inventory-header">
+                    <h3><i class="fas fa-database"></i> สถานะคุณภาพข้อมูลและพจนานุกรมข้อมูล (Dataset Inventory & Quality)</h3>
+                </div>
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>ชุดข้อมูล</th>
+                                <th>ชื่อย่อ</th>
+                                <th>ไฟล์ข้อมูล</th>
+                                <th>จำนวนแถว</th>
+                                <th>ช่วงเวลา</th>
+                                <th>ตัวชี้วัดสำคัญ</th>
+                                <th>หมายเหตุด้านคุณภาพ (Quality Notes)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="inventory-table-body">
+                            <!-- Populated dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Page Footer (Section 14) -->
+            <div class="page-footer-source">
+                <strong>Source & Methodology:</strong>
+                <div class="page-footer-grid">
+                    <div><strong>AFNC:</strong> ศูนย์ต่อต้านข่าวปลอม ประเทศไทย (2019–2026)</div>
+                    <div><strong>ACSC:</strong> ศูนย์ปฏิบัติการแก้ไขปัญหาอาชญากรรมออนไลน์ (48 สัปดาห์)</div>
+                    <div><strong>AIID:</strong> AI Incident Database (Global, 1983–2026)</div>
+                    <div><strong>Freedom House:</strong> Freedom on the Net (2010–2024, 71 ประเทศ)</div>
+                </div>
+                <p style="margin-top: 8px;"><strong>หมายเหตุ:</strong> ชุดข้อมูลแต่ละชุดสะท้อนข้อมูลตามขอบเขตและวิธีการจัดเก็บของหน่วยงานนั้นๆ ไม่สามารถนำตัวเลขต่างหน่วยมาบวกรวมกันโดยตรงได้</p>
+            </div>
+        </section>
+
+        <!-- ======================== PAGE 2: FAKE NEWS ======================== -->
+        <section class="page" id="page-fakenews">
+            <div class="page-header">
+                <h2><i class="fas fa-newspaper"></i> ข่าวปลอมและข้อมูลบิดเบือนในประเทศไทย</h2>
+                <p class="subtitle">วิเคราะห์ข้อมูลการตรวจสอบข้อเท็จจริงจาก Anti-Fake News Center Thailand (AFNC) | 2019–2026</p>
+            </div>
+
+            <!-- Filters -->
+            <div class="filter-bar">
+                <div class="filter-group">
+                    <label><i class="fas fa-calendar"></i> ปี:</label>
+                    <select id="afnc-year-filter" class="filter-select">
+                        <option value="all">ทั้งหมด (2019–2026)</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label><i class="fas fa-check-circle"></i> ผลการตรวจสอบ:</label>
+                    <select id="afnc-verdict-filter" class="filter-select">
+                        <option value="all">ทั้งหมด (All Verdicts)</option>
+                        <option value="Fake">ข่าวปลอม (Fake)</option>
+                        <option value="Distorted">ข่าวบิดเบือน (Distorted)</option>
+                        <option value="True">ข่าวจริง (True)</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label><i class="fas fa-tags"></i> หมวดหมู่:</label>
+                    <select id="afnc-cat-filter" class="filter-select">
+                        <option value="all">ทุกหมวดหมู่</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- AFNC KPIs -->
+            <div class="kpi-grid-small">
+                <div class="kpi-card-sm">
+                    <span class="kpi-value-sm" id="afnc-total">17,726</span>
+                    <span class="kpi-label-sm">รายการทั้งหมด</span>
+                </div>
+                <div class="kpi-card-sm kpi-fake">
+                    <span class="kpi-value-sm" id="afnc-fake">9,520 (65.8%)</span>
+                    <span class="kpi-label-sm">ข่าวปลอม (Fake)</span>
+                </div>
+                <div class="kpi-card-sm kpi-distorted">
+                    <span class="kpi-value-sm" id="afnc-distorted">1,435 (9.9%)</span>
+                    <span class="kpi-label-sm">ข่าวบิดเบือน (Distorted)</span>
+                </div>
+                <div class="kpi-card-sm kpi-true">
+                    <span class="kpi-value-sm" id="afnc-true">3,503 (24.2%)</span>
+                    <span class="kpi-label-sm">ข่าวจริง (True)</span>
+                </div>
+            </div>
+
+            <!-- Charts Row 1: Trend & 100% Stacked -->
+            <div class="chart-grid-2">
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>3.1 แนวโน้มจำนวนข่าวที่ตรวจสอบรายเดือน (Verification Trend)</h3>
+                        <span class="chart-source">แสดงจำนวนรายการที่ตรวจสอบแยกตามผลคำวินิจฉัย (Fake, Distorted, True)</span>
+                    </div>
+                    <div class="chart-body chart-tall">
+                        <canvas id="afnc-trend-line"></canvas>
+                    </div>
+                </div>
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>3.2 สัดส่วนผลการตรวจสอบรายปี (Verdict Composition 100% Stacked)</h3>
+                        <span class="chart-source">แสดงสัดส่วนร้อยละ (%) เพื่อดูวิวัฒนาการของคุณภาพข้อมูลที่ตรวจสอบในแต่ละปี</span>
+                    </div>
+                    <div class="chart-body chart-tall">
+                        <canvas id="afnc-verdict-stacked"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts Row 2: Topics & Items by Type -->
+            <div class="chart-grid-2">
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>3.3 หมวดหมู่ข่าวที่พบมากที่สุด (Fake News Topics)</h3>
+                        <span class="chart-source">จำแนกตามหมวดหมู่จริงในฐานข้อมูล AFNC (เรียงลำดับจากมากไปน้อย)</span>
+                    </div>
+                    <div class="chart-body chart-tall">
+                        <canvas id="afnc-category-bar"></canvas>
+                    </div>
+                </div>
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>3.4 ประเภทของข้อมูลในฐานข้อมูล (Items by Type)</h3>
+                        <span class="chart-source">แยกประเภทระหว่างข่าวที่ตัดสินผล (Verdict), บทความให้ความรู้, และแจ้งเตือนภัย</span>
+                    </div>
+                    <div class="chart-body chart-tall">
+                        <canvas id="afnc-type-bar"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Case Explorer Table (Section 3.5) -->
+            <div class="table-card">
+                <div class="table-toolbar">
+                    <div class="table-title">
+                        <i class="fas fa-list-check"></i> 3.5 สำรวจรายการข่าวในฐานข้อมูล (AFNC Case Explorer)
+                    </div>
+                    <div class="search-input-wrap">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="afnc-search" class="table-search" placeholder="ค้นหาหัวข้อข่าว, คีย์เวิร์ด...">
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>รหัส (ID)</th>
+                                <th>วันที่</th>
+                                <th>ประเภทรายการ</th>
+                                <th>ผลการตรวจสอบ</th>
+                                <th>หมวดหมู่</th>
+                                <th>หัวข้อข่าว / ข้อความ</th>
+                                <th>ยอดวิว</th>
+                            </tr>
+                        </thead>
+                        <tbody id="afnc-table-body">
+                            <!-- Populated dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+                <div class="table-pagination">
+                    <span id="afnc-page-info">กำลังแสดง 1-15 จาก 17,726 รายการ</span>
+                    <div class="pagination-controls">
+                        <button class="page-btn" id="afnc-prev-btn" onclick="changeAfncPage(-1)"><i class="fas fa-chevron-left"></i> ก่อนหน้า</button>
+                        <button class="page-btn" id="afnc-next-btn" onclick="changeAfncPage(1)">ถัดไป <i class="fas fa-chevron-right"></i></button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Insights Section (Section 3.6) -->
+            <div class="insights-section">
+                <h3><i class="fas fa-lightbulb"></i> ข้อค้นพบสำคัญด้านข่าวปลอม (AFNC Insights)</h3>
+                <div class="insight-cards">
+                    <div class="insight-card">
+                        <strong>1. คำวินิจฉัยส่วนใหญ่คือข่าวปลอม (65.8%):</strong> ข้อมูลที่ถูกส่งเข้ามาตรวจสอบและเข้าเกณฑ์ ส่วนใหญ่เป็นข้อมูลเท็จโดยสิ้นเชิง รองลงมาคือข่าวจริง (24.2%) และข่าวบิดเบือนข้อเท็จจริงบางส่วน (9.9%)
+                    </div>
+                    <div class="insight-card">
+                        <strong>2. นโยบายรัฐและสุขภาพคือเป้าหมายหลัก:</strong> หมวดหมู่นโยบายภาครัฐ (6,272 ข่าว) และผลิตภัณฑ์สุขภาพ (3,788 ข่าว) คิดเป็นสัดส่วนมากกว่า 56% ของข้อมูลทั้งหมด ชี้ให้เห็นว่าผู้ปล่อยข่าวมักอาศัยความกังวลด้านสุขภาพและสวัสดิการรัฐเป็นเครื่องมือ
+                    </div>
+                    <div class="insight-card">
+                        <strong>3. ปริมาณการตรวจสอบเติบโตสูงสุดช่วงปี 2023–2025:</strong> ปริมาณข้อมูลตรวจสอบต่อปีเพิ่มขึ้นจาก 79 รายการในปี 2019 สู่กว่า 3,400 รายการในปี 2025 สะท้อนความตื่นตัวของประชาชนในการส่งตรวจสอบข่าวสาร
+                    </div>
+                </div>
+            </div>
+
+            <!-- Data Note & Source Footer (Section 14) -->
+            <div class="data-note">
+                <i class="fas fa-info-circle"></i>
+                <p><strong>ข้อควรระวังในการตีความ:</strong> ข้อมูล AFNC หมายถึงข้อมูลที่หน่วยงานรวบรวมและตรวจสอบตามขอบเขตการทำงาน ไม่ได้เท่ากับจำนวนข่าวปลอมทั้งหมดที่แพร่กระจายในประเทศไทย และช่วงเวลาที่มีข่าวปลอมถูกตรวจสอบสูงไม่ได้แปลว่าคนไทยผลิตข่าวปลอมมากขึ้นโดยตรง</p>
+            </div>
+            <div class="page-footer-source">
+                <strong>Source:</strong> Anti-Fake News Center Thailand (AFNC) | <strong>Period:</strong> 2019–2026 | <strong>Total Checked:</strong> 17,726 items | <strong>Verdicts:</strong> 14,458
+            </div>
+        </section>
+
+        <!-- ======================== PAGE 3: ONLINE SCAMS ======================== -->
+        <section class="page" id="page-scams">
+            <div class="page-header">
+                <h2><i class="fas fa-user-secret"></i> การหลอกลวงออนไลน์ในประเทศไทย</h2>
+                <p class="subtitle">วิเคราะห์ข้อมูลสถิติคดีและมูลค่าความเสียหายรายสัปดาห์จาก Anti Online Scam Operation Center (ACSC) | พ.ย. 2025 – ต.ค. 2026</p>
+            </div>
+
+            <!-- ACSC KPIs -->
+            <div class="kpi-grid-small">
+                <div class="kpi-card-sm">
+                    <span class="kpi-value-sm" id="acsc-weeks">48 สัปดาห์</span>
+                    <span class="kpi-label-sm">สัปดาห์ที่มีข้อมูลต่อเนื่อง</span>
+                </div>
+                <div class="kpi-card-sm kpi-fake">
+                    <span class="kpi-value-sm" id="acsc-total-cases">381,390 คดี</span>
+                    <span class="kpi-label-sm">รวมจำนวนคดีแจ้งความ</span>
+                </div>
+                <div class="kpi-card-sm kpi-distorted">
+                    <span class="kpi-value-sm" id="acsc-total-damage">18,177.37 ลบ.</span>
+                    <span class="kpi-label-sm">รวมมูลค่าความเสียหาย (บาท)</span>
+                </div>
+                <div class="kpi-card-sm kpi-true">
+                    <span class="kpi-value-sm" id="acsc-avg-percase">47,660 บาท</span>
+                    <span class="kpi-label-sm">ความเสียหายเฉลี่ยต่อคดี</span>
+                </div>
+            </div>
+
+            <!-- Section 4.6 Comparison Cards (Volume vs Value Paradox) -->
+            <div class="comparison-grid">
+                <div class="compare-card">
+                    <div class="compare-card-title"><i class="fas fa-bullseye"></i> Most Cases (คดีจำนวนมากที่สุด)</div>
+                    <div class="compare-main-text">หลอกซื้อขายสินค้าและบริการออนไลน์</div>
+                    <div class="compare-details">
+                        ครองอันดับ 1 ในทุกสัปดาห์ ด้วยสัดส่วนเฉลี่ย <strong>70% – 85% ของคดีทั้งหมด</strong> มีความถี่ในการเกิดสูงมาก กระทบประชาชนวงกว้าง แต่มูลค่าต่อคดีมักเป็นยอดเงินหลักร้อยถึงหลักพันบาท
+                    </div>
+                </div>
+                <div class="compare-card card-loss">
+                    <div class="compare-card-title"><i class="fas fa-coins"></i> Highest Financial Loss (สร้างความเสียหายทางการเงินสูงสุด)</div>
+                    <div class="compare-main-text">หลอกให้ลงทุน / ข่มขู่ทางโทรศัพท์ / หลอกโอนเงินรับรางวัล</div>
+                    <div class="compare-details">
+                        แม้จำนวนคดีจะมีสัดส่วนน้อยกว่า แต่สร้างความเสียหายรวมสูงที่สุดในข้อมูลรายสัปดาห์ แต่ละคดีสร้างความสูญเสียตั้งแต่หลักแสนจนถึงหลายล้านบาทต่อผู้เสียหายหนึ่งราย
+                    </div>
+                </div>
+            </div>
+
+            <!-- Separate Charts for Cases and Loss (Section 4.1 & 4.2 - No misleading dual-axis) -->
+            <div class="chart-grid-2">
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>4.1 จำนวนคดีหลอกลวงรายสัปดาห์ (Weekly Scam Cases)</h3>
+                        <span class="chart-source">ACSC | หน่วย: จำนวนคดี (เฉลี่ย ~7,945 คดี/สัปดาห์)</span>
+                    </div>
+                    <div class="chart-body chart-tall">
+                        <canvas id="acsc-cases-line"></canvas>
+                    </div>
+                </div>
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>4.2 มูลค่าความเสียหายรายสัปดาห์ (Weekly Financial Loss)</h3>
+                        <span class="chart-source">ACSC | หน่วย: ล้านบาท (แยกแกนชัดเจนตามหลัก Data Viz)</span>
+                    </div>
+                    <div class="chart-body chart-tall">
+                        <canvas id="acsc-damage-line"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts Row 2: Types & Loss Per Case -->
+            <div class="chart-grid-2">
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>4.3 ประเภทคดีที่พบมากที่สุด (Cases by Top Scam Type)</h3>
+                        <span class="chart-source">ความถี่ที่แต่ละประเภทติดอันดับ 1 ในรอบ 48 สัปดาห์</span>
+                    </div>
+                    <div class="chart-body chart-tall">
+                        <canvas id="acsc-toptype-bar"></canvas>
+                    </div>
+                </div>
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>4.4 ประเภทที่สร้างความเสียหายสูงสุด (Highest Loss Scam Types)</h3>
+                        <span class="chart-source">ความถี่ที่แต่ละประเภทสร้างมูลค่าความเสียหายสูงสุดประจำสัปดาห์</span>
+                    </div>
+                    <div class="chart-body chart-tall">
+                        <canvas id="acsc-loss-type-bar"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chart Row 3: Loss per case trend -->
+            <div class="chart-grid-1">
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>4.5 ความเสียหายเฉลี่ยต่อคดีรายสัปดาห์ (Weekly Loss per Case)</h3>
+                        <span class="chart-source">คำนวณจาก มูลค่าความเสียหายรวม ÷ จำนวนคดี (หน่วย: บาท/คดี)</span>
+                    </div>
+                    <div class="chart-body chart-tall">
+                        <canvas id="acsc-percase-line"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Weekly Detail Table (Section 4.7) -->
+            <div class="table-card">
+                <div class="table-toolbar">
+                    <div class="table-title">
+                        <i class="fas fa-table"></i> 4.7 ตารางรายละเอียดคดีรายสัปดาห์ (ACSC Weekly Detail Table)
+                    </div>
+                    <div class="search-input-wrap">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="acsc-search" class="table-search" placeholder="ค้นหาสัปดาห์, ประเภทคดี...">
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>สัปดาห์เริ่มต้น</th>
+                                <th>สัปดาห์สิ้นสุด</th>
+                                <th>จำนวนคดี</th>
+                                <th>ความเสียหาย (ล้านบาท)</th>
+                                <th>เฉลี่ยต่อคดี (บาท)</th>
+                                <th>ประเภทคดีอันดับ 1 (% แชร์)</th>
+                                <th>ประเภทที่เสียหายสูงสุด</th>
+                                <th>สถานะข้อมูล</th>
+                            </tr>
+                        </thead>
+                        <tbody id="acsc-table-body">
+                            <!-- Populated dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+                <div class="table-pagination">
+                    <span id="acsc-page-info">กำลังแสดง 1-12 จาก 48 สัปดาห์</span>
+                    <div class="pagination-controls">
+                        <button class="page-btn" id="acsc-prev-btn" onclick="changeAcscPage(-1)"><i class="fas fa-chevron-left"></i> ก่อนหน้า</button>
+                        <button class="page-btn" id="acsc-next-btn" onclick="changeAcscPage(1)">ถัดไป <i class="fas fa-chevron-right"></i></button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Insights (Section 4.8) -->
+            <div class="insights-section">
+                <h3><i class="fas fa-lightbulb"></i> ข้อค้นพบสำคัญด้านภัยหลอกลวงออนไลน์ (ACSC Insights)</h3>
+                <div class="insight-cards">
+                    <div class="insight-card">
+                        <strong>1. สัปดาห์ที่มีคดีและมูลค่าความเสียหายสูง:</strong> ค่าเฉลี่ยความเสียหายต่อสัปดาห์อยู่ที่ ~378 ล้านบาท โดยมีบางสัปดาห์ที่พุ่งสูงทะลุ 1,000–2,700 ล้านบาท เมื่อมีคดีขบวนการลงทุนขนาดใหญ่แตก
+                    </div>
+                    <div class="insight-card">
+                        <strong>2. Volume vs Impact Disconnect:</strong> การหลอกซื้อขายสินค้าออนไลน์เกิดขึ้นตลอดเวลาและมีสัดส่วนเกิน 75% ของคดี แต่หลอกลงทุนคือตัวการหลักที่ดูดเงินออกจากระบบเศรษฐกิจ
+                    </div>
+                    <div class="insight-card">
+                        <strong>3. ความเสียหายเฉลี่ยต่อคดี:</strong> อยู่ที่ประมาณ 47,660 บาท/คดี แต่มีความผันผวนตั้งแต่ 23,900 ถึง 89,450 บาท สะท้อนว่าประเภทของกลโกงในแต่ละสัปดาห์กำหนดระดับความเสียหาย
+                    </div>
+                </div>
+            </div>
+
+            <div class="data-note">
+                <i class="fas fa-info-circle"></i>
+                <p><strong>ข้อควรระวัง:</strong> ข้อมูลสะท้อนเฉพาะคดีที่มีการแจ้งความผ่านระบบของศูนย์ ACSC เท่านั้น มีเหยื่อจำนวนไม่น้อยที่ไม่ประสงค์แจ้งความเนื่องจากมูลค่าน้อย หรืออับอาย ดังนั้นความเสียหายที่แท้จริงในสังคมย่อมสูงกว่าตัวเลขนี้</p>
+            </div>
+            <div class="page-footer-source">
+                <strong>Source:</strong> Anti Online Scam Operation Center (ACSC) | <strong>Period:</strong> พ.ย. 2025 – ต.ค. 2026 (48 สัปดาห์) | <strong>Total Cases:</strong> 381,390 | <strong>Total Loss:</strong> 18.18 พันล้านบาท
+            </div>
+        </section>
+
+        <!-- ======================== PAGE 4: AI RISKS ======================== -->
+        <section class="page" id="page-ai-risks">
+            <div class="page-header">
+                <h2><i class="fas fa-robot"></i> AI Risks & Social Impact</h2>
+                <p class="subtitle">วิเคราะห์เหตุการณ์ความเสียหายและความเสี่ยงจากระบบ AI ทั่วโลก | AI Incident Database (AIID) | 1983–2026</p>
+            </div>
+
+            <!-- Global Scope Warning Banner -->
+            <div class="data-note" style="margin-bottom: 20px; border-left: 4px solid var(--accent-blue);">
+                <i class="fas fa-globe-americas"></i>
+                <p><strong>หมายเหตุสำคัญด้านขอบเขตข้อมูล:</strong> AI Incident Database เป็นฐานข้อมูลงานวิจัยระดับนานาชาติ (Global) รวบรวมเหตุการณ์ความเสียหาย ความผิดพลาด และการใช้ AI ในทางที่ผิดจากทั่วโลก ไม่ใช่ข้อมูลเฉพาะประเทศไทย</p>
+            </div>
+
+            <!-- Filters -->
+            <div class="filter-bar">
+                <div class="filter-group">
+                    <label><i class="fas fa-calendar"></i> ปีเริ่มต้น:</label>
+                    <select id="aiid-year-from" class="filter-select"></select>
+                    <span>ถึง</span>
+                    <select id="aiid-year-to" class="filter-select"></select>
+                </div>
+                <div class="filter-group">
+                    <label><i class="fas fa-shield-virus"></i> Risk Domain:</label>
+                    <select id="aiid-risk-filter" class="filter-select">
+                        <option value="all">ทั้งหมด (All Risk Domains)</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label><i class="fas fa-crosshairs"></i> เจตนา (Intent):</label>
+                    <select id="aiid-intent-filter" class="filter-select">
+                        <option value="all">ทั้งหมด (All Intents)</option>
+                        <option value="Intentional">Intentional (เจตนา)</option>
+                        <option value="Unintentional">Unintentional (ไม่ได้เจตนา / ระบบผิดพลาด)</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- AIID KPIs -->
+            <div class="kpi-grid-small">
+                <div class="kpi-card-sm">
+                    <span class="kpi-value-sm" id="aiid-total">1,775</span>
+                    <span class="kpi-label-sm">เหตุการณ์ทั้งหมดในฐานข้อมูล</span>
+                </div>
+                <div class="kpi-card-sm kpi-fake">
+                    <span class="kpi-value-sm" id="aiid-top-risk">566 (31.9%)</span>
+                    <span class="kpi-label-sm">Malicious Actors & Misuse</span>
+                </div>
+                <div class="kpi-card-sm kpi-distorted">
+                    <span class="kpi-value-sm" id="aiid-deepfakes">567 เหตุการณ์</span>
+                    <span class="kpi-label-sm">Deepfake / สื่อสังเคราะห์</span>
+                </div>
+                <div class="kpi-card-sm kpi-true">
+                    <span class="kpi-value-sm" id="aiid-top-deployer">Scammers (53)</span>
+                    <span class="kpi-label-sm">Deployer อันดับ 1 ในฐานข้อมูล</span>
+                </div>
+            </div>
+
+            <!-- Charts Row 1: Trend & Domains -->
+            <div class="chart-grid-2">
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>5.1 เหตุการณ์ AI ตามปี (AI Incidents by Year)</h3>
+                        <span class="chart-source">การเติบโตแบบก้าวกระโดดนับตั้งแต่การมาถึงของ Generative AI</span>
+                    </div>
+                    <div class="chart-body chart-tall">
+                        <canvas id="aiid-yearly-bar"></canvas>
+                    </div>
+                </div>
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>5.2 ประเภทความเสี่ยงที่พบ (Incidents by Risk Domain)</h3>
+                        <span class="chart-source">การจัดหมวดหมู่ความเสี่ยงตามมาตรฐานของ AIID</span>
+                    </div>
+                    <div class="chart-body chart-tall">
+                        <canvas id="aiid-risk-bar"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts Row 2: Intent & Deepfake -->
+            <div class="chart-grid-2">
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>5.3 รูปแบบเจตนาในการเกิดเหตุ (Incidents by Intent)</h3>
+                        <span class="chart-source">เปรียบเทียบระหว่างความผิดพลาดของระบบ (Unintentional) กับการจงใจใช้ในทางที่ผิด (Intentional)</span>
+                    </div>
+                    <div class="chart-body">
+                        <canvas id="aiid-intent-pie"></canvas>
+                    </div>
+                </div>
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>5.5 แนวโน้มเหตุการณ์ Deepfake และสื่อสังเคราะห์ (Deepfake Surge)</h3>
+                        <span class="chart-source">เหตุการณ์ที่เกี่ยวข้องกับการโคลนเสียง ใบหน้า และภาพลวง</span>
+                    </div>
+                    <div class="chart-body">
+                        <canvas id="aiid-deepfake-line"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 5.4 Risk Domain x Intent Heatmap -->
+            <div class="table-card">
+                <div class="table-toolbar">
+                    <div class="table-title">
+                        <i class="fas fa-th"></i> 5.4 ตารางความสัมพันธ์ข้ามมิติ: Risk Domain × Intent (Heatmap Matrix)
+                    </div>
+                    <span class="chart-source">แสดงจำนวนเหตุการณ์ตามความเข้มข้นของสี</span>
+                </div>
+                <div class="heatmap-container">
+                    <table class="heatmap-table" id="aiid-heatmap-table">
+                        <!-- Populated dynamically -->
+                    </table>
+                </div>
+            </div>
+
+            <!-- Top Deployers -->
+            <div class="chart-grid-1">
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>Top 10 Deployers ที่ถูกระบุในเหตุการณ์ AI</h3>
+                        <span class="chart-source">ผู้ที่นำระบบ AI ไปปรับใช้จนเกิดเหตุการณ์ (Deployers)</span>
+                    </div>
+                    <div class="chart-body chart-tall">
+                        <canvas id="aiid-deployer-bar"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Case Explorer (Section 5.6) -->
+            <div class="table-card">
+                <div class="table-toolbar">
+                    <div class="table-title">
+                        <i class="fas fa-microscope"></i> 5.6 ฐานข้อมูลกรณีศึกษาตัวอย่าง (AI Incident Case Study Explorer)
+                    </div>
+                    <div class="search-input-wrap">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="aiid-search" class="table-search" placeholder="ค้นหาเหตุการณ์, ระบบ AI, คีย์เวิร์ด...">
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>ปี</th>
+                                <th>หัวข้อเหตุการณ์ (Title)</th>
+                                <th>Risk Domain</th>
+                                <th>เจตนา (Intent)</th>
+                                <th>ระบบที่เกี่ยวข้อง</th>
+                                <th>ผู้ใช้งานระบบ (Deployer)</th>
+                                <th>รายละเอียดโดยย่อ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="aiid-table-body">
+                            <!-- Populated dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+                <div class="table-pagination">
+                    <span id="aiid-page-info">กำลังแสดง 1-12 จาก 1,775 เหตุการณ์</span>
+                    <div class="pagination-controls">
+                        <button class="page-btn" id="aiid-prev-btn" onclick="changeAiidPage(-1)"><i class="fas fa-chevron-left"></i> ก่อนหน้า</button>
+                        <button class="page-btn" id="aiid-next-btn" onclick="changeAiidPage(1)">ถัดไป <i class="fas fa-chevron-right"></i></button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Insights -->
+            <div class="insights-section">
+                <h3><i class="fas fa-lightbulb"></i> ข้อค้นพบสำคัญด้านความเสี่ยง AI (AIID Insights)</h3>
+                <div class="insight-cards">
+                    <div class="insight-card">
+                        <strong>1. สัดส่วนเจตนาใกล้เคียงกัน:</strong> เหตุการณ์ความเสียหายจาก AI เกิดจากความผิดพลาดของระบบโดยไม่ได้ตั้งใจ (Unintentional 740 กรณี) ใกล้เคียงกับการนำไปใช้โจมตีโดยเจตนา (Intentional 735 กรณี)
+                    </div>
+                    <div class="insight-card">
+                        <strong>2. ผู้ไม่หวังดีกลายเป็น Deployer ชั้นนำ:</strong> กลุ่ม "Scammers" ติดอันดับ 1 ของผู้ใช้งานระบบ AI ในฐานข้อมูล สะท้อนว่าอาชญากรไซเบอร์นำ AI ไปประยุกต์ใช้เพื่อหลอกลวงเร็วกว่าหน่วยงานกำกับดูแล
+                    </div>
+                    <div class="insight-card">
+                        <strong>3. Deepfake และสื่อสังเคราะห์เพิ่มขึ้นทวีคูณ:</strong> ตั้งแต่ปี 2023 เป็นต้นมา เหตุการณ์ปลอมแปลงเสียงและใบหน้าด้วย AI พุ่งสูงขึ้นอย่างชัดเจน กลายเป็นอาวุธสำคัญในทั้งข่าวปลอมและคดีหลอกลวง
+                    </div>
+                </div>
+            </div>
+
+            <div class="page-footer-source">
+                <strong>Source:</strong> AI Incident Database (AIID) | <strong>Scope:</strong> Global (ระดับนานาชาติ) | <strong>Period:</strong> 1983–2026 | <strong>Total Incidents:</strong> 1,775
+            </div>
+        </section>
+
+        <!-- ======================== PAGE 5: INTERNET FREEDOM ======================== -->
+        <section class="page" id="page-freedom">
+            <div class="page-header">
+                <h2><i class="fas fa-globe"></i> เสรีภาพอินเทอร์เน็ต (Internet Freedom)</h2>
+                <p class="subtitle">วิเคราะห์คะแนนเสรีภาพอินเทอร์เน็ตทั่วโลกและตำแหน่งของประเทศไทย | Freedom House, Freedom on the Net | 2010–2024</p>
+            </div>
+
+            <!-- Filters -->
+            <div class="filter-bar">
+                <div class="filter-group">
+                    <label><i class="fas fa-calendar"></i> ปีที่ประเมิน:</label>
+                    <select id="freedom-year-filter" class="filter-select">
+                        <option value="2024">ปีล่าสุด (2024)</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label><i class="fas fa-flag"></i> สถานะเสรีภาพ:</label>
+                    <select id="freedom-status-filter" class="filter-select">
+                        <option value="all">ทั้งหมด (All Statuses)</option>
+                        <option value="Free">Free (เสรี 70–100)</option>
+                        <option value="Partly Free">Partly Free (เสรีบางส่วน 40–69)</option>
+                        <option value="Not Free">Not Free (ไม่เสรี 0–39)</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Freedom KPIs -->
+            <div class="kpi-grid-small">
+                <div class="kpi-card-sm kpi-fake">
+                    <span class="kpi-value-sm" id="freedom-th-score">39 / 100</span>
+                    <span class="kpi-label-sm">คะแนนรวมไทย (2024)</span>
+                </div>
+                <div class="kpi-card-sm kpi-fake">
+                    <span class="kpi-value-sm" id="freedom-th-status">Not Free (ไม่เสรี)</span>
+                    <span class="kpi-label-sm">สถานะเสรีภาพไทย</span>
+                </div>
+                <div class="kpi-card-sm">
+                    <span class="kpi-value-sm" id="freedom-countries">71 ประเทศ</span>
+                    <span class="kpi-label-sm">ประเทศที่ได้รับการประเมิน</span>
+                </div>
+                <div class="kpi-card-sm kpi-true">
+                    <span class="kpi-value-sm" id="freedom-avg-score">52.9 / 100</span>
+                    <span class="kpi-label-sm">คะแนนเฉลี่ยทั่วโลก</span>
+                </div>
+            </div>
+
+            <!-- 6.1 World Choropleth Map -->
+            <div class="chart-grid-1">
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>6.1 แผนที่ระดับเสรีภาพอินเทอร์เน็ตทั่วโลก (World Choropleth Map)</h3>
+                        <span class="chart-source">Freedom House 2024 | เขียว = Free (70–100), เหลือง/ส้ม = Partly Free (40–69), แดง = Not Free (0–39) | คลิกที่ประเทศเพื่อดูรายละเอียด</span>
+                    </div>
+                    <div class="chart-body" style="height: 480px;" id="freedom-world-map">
+                        <!-- Plotly map renders here -->
+                    </div>
+                    <!-- Selected Country Detail Card -->
+                    <div class="country-detail-box" id="country-detail-box">
+                        <h4 id="selected-country-name"><i class="fas fa-map-pin"></i> ข้อมูลประเทศ: Thailand (THA) — 39 คะแนน (Not Free)</h4>
+                        <div class="country-score-breakdown">
+                            <div class="breakdown-item">
+                                <span>อุปสรรคการเข้าถึง (Access)</span>
+                                <strong id="country-access-score">14 / 25</strong>
+                            </div>
+                            <div class="breakdown-item">
+                                <span>การจำกัดเนื้อหา (Content)</span>
+                                <strong id="country-content-score">14 / 35</strong>
+                            </div>
+                            <div class="breakdown-item">
+                                <span>การละเมิดสิทธิผู้ใช้ (User Rights)</span>
+                                <strong id="country-rights-score" style="color: var(--accent-red);">8 / 40</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts Row 2: Thailand vs ASEAN & Components -->
+            <div class="chart-grid-2">
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>6.2 เปรียบเทียบคะแนนไทยกับอาเซียน (Thailand vs ASEAN 2024)</h3>
+                        <span class="chart-source">เปรียบเทียบ 6 ประเทศในอาเซียนที่ได้รับการประเมินโดย Freedom House</span>
+                    </div>
+                    <div class="chart-body chart-tall">
+                        <canvas id="freedom-asean-bar"></canvas>
+                    </div>
+                </div>
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>6.4 องค์ประกอบคะแนนของไทยเทียบค่าเฉลี่ย (Freedom Components)</h3>
+                        <span class="chart-source">เจาะลึก 3 เสาหลัก: อุปสรรคการเข้าถึง, การจำกัดเนื้อหา, และสิทธิผู้ใช้งาน</span>
+                    </div>
+                    <div class="chart-body chart-tall">
+                        <canvas id="freedom-th-components"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts Row 3: Thailand Trend & Component Trend -->
+            <div class="chart-grid-2">
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>6.3 แนวโน้มคะแนนของไทย 15 ปี (Thailand Score Trend 2010–2024)</h3>
+                        <span class="chart-source">คะแนนรวมของไทยเปรียบเทียบกับค่าเฉลี่ยอาเซียน</span>
+                    </div>
+                    <div class="chart-body chart-tall">
+                        <canvas id="freedom-th-trend"></canvas>
+                    </div>
+                </div>
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>6.5 วิวัฒนาการ 3 เสาหลักของไทย (Component Trend 2010–2024)</h3>
+                        <span class="chart-source">แสดงให้เห็นว่ามิติสิทธิผู้ใช้งาน (User Rights) ต่ำสุดมาโดยตลอด</span>
+                    </div>
+                    <div class="chart-body chart-tall">
+                        <canvas id="freedom-component-trend"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Country Rankings Explorer Table -->
+            <div class="table-card">
+                <div class="table-toolbar">
+                    <div class="table-title">
+                        <i class="fas fa-ranking-star"></i> ตารางอันดับคะแนนเสรีภาพอินเทอร์เน็ตทุกประเทศ (2024 Ranking Table)
+                    </div>
+                    <div class="search-input-wrap">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="freedom-search" class="table-search" placeholder="ค้นหาชื่อประเทศ, รหัส ISO3...">
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>อันดับ</th>
+                                <th>ประเทศ</th>
+                                <th>ISO3</th>
+                                <th>คะแนนรวม (100)</th>
+                                <th>Access (25)</th>
+                                <th>Content (35)</th>
+                                <th>User Rights (40)</th>
+                                <th>สถานะ (Status)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="freedom-table-body">
+                            <!-- Populated dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+                <div class="table-pagination">
+                    <span id="freedom-page-info">กำลังแสดง 1-15 จาก 71 ประเทศ</span>
+                    <div class="pagination-controls">
+                        <button class="page-btn" id="freedom-prev-btn" onclick="changeFreedomPage(-1)"><i class="fas fa-chevron-left"></i> ก่อนหน้า</button>
+                        <button class="page-btn" id="freedom-next-btn" onclick="changeFreedomPage(1)">ถัดไป <i class="fas fa-chevron-right"></i></button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Insights -->
+            <div class="insights-section">
+                <h3><i class="fas fa-lightbulb"></i> ข้อค้นพบสำคัญด้านเสรีภาพอินเทอร์เน็ต (Freedom Insights)</h3>
+                <div class="insight-cards">
+                    <div class="insight-card">
+                        <strong>1. ไทยจัดอยู่ในกลุ่ม "ไม่เสรี" (Not Free):</strong> ด้วยคะแนน 39 เต็ม 100 ไทยอยู่ในกลุ่ม Not Free ร่วมกับเมียนมา (9 คะแนน) ในอาเซียน ขณะที่มาเลเซีย (60) สิงคโปร์ (53) อินโดนีเซีย (48) และกัมพูชา (42) จัดเป็น Partly Free
+                    </div>
+                    <div class="insight-card">
+                        <strong>2. จุดอ่อนหลักอยู่ที่สิทธิผู้ใช้งาน (User Rights):</strong> ไทยได้คะแนนสิทธิผู้ใช้เพียง 8 จาก 40 คะแนน (20%) ซึ่งสะท้อนถึงการจับกุมดำเนินคดี การสอดส่อง และบทลงโทษทางกฎหมายที่รุนแรงในการแสดงออกทางออนไลน์
+                    </div>
+                    <div class="insight-card">
+                        <strong>3. การเข้าถึงโครงสร้างพื้นฐานอยู่ในเกณฑ์ดี:</strong> ด้านอุปสรรคการเข้าถึง (Obstacles to Access) ไทยทำได้ 14 จาก 25 คะแนน (56%) สะท้อนว่าปัญหาของไทยไม่ใช่เรื่องโครงข่ายอินเทอร์เน็ต แต่เป็นเรื่องการจำกัดเนื้อหาและการคุ้มครองสิทธิ
+                    </div>
+                </div>
+            </div>
+
+            <div class="page-footer-source">
+                <strong>Source:</strong> Freedom on the Net (Freedom House) | <strong>Methodology:</strong> คะแนน 0–100 (คะแนนสูง = เสรีภาพสูง) แบ่งเป็น 3 ส่วน: Access (25), Content (35), Rights (40) | <strong>Edition:</strong> 2024
+            </div>
+        </section>
+
+        <!-- ======================== PAGE 6: FINAL INSIGHTS ======================== -->
+        <section class="page" id="page-final-insights">
+            <div class="page-header">
+                <h2><i class="fas fa-lightbulb"></i> บทสรุปและสิ่งที่เราควรเรียนรู้ (Final Insights & Takeaways)</h2>
+                <p class="subtitle">การสังเคราะห์ข้อค้นพบจาก 4 ฐานข้อมูล เพื่อทำความเข้าใจภัยคุกคามในโลกดิจิทัลกับสภาพแวดล้อมด้านข้อมูลของสังคมไทย</p>
+            </div>
+
+            <!-- Storytelling Narrative Flow (Section 15 & 18) -->
+            <div class="story-flow">
+                <div class="story-step">
+                    <div class="story-step-num">Step 01</div>
+                    <div class="story-step-title">Overview</div>
+                    <div class="story-step-sub">ภัยดิจิทัลมีหลายมิติและคนละหน่วยวัด</div>
+                </div>
+                <div class="story-arrow"><i class="fas fa-chevron-right"></i></div>
+                <div class="story-step">
+                    <div class="story-step-num">Step 02</div>
+                    <div class="story-step-title">Evidence</div>
+                    <div class="story-step-sub">ข้อมูลข่าวปลอมมุ่งเป้าสุขภาพและนโยบายรัฐ</div>
+                </div>
+                <div class="story-arrow"><i class="fas fa-chevron-right"></i></div>
+                <div class="story-step">
+                    <div class="story-step-num">Step 03</div>
+                    <div class="story-step-title">Impact</div>
+                    <div class="story-step-sub">คดีหลอกลวงสร้างความเสียหายทางการเงินจริง 1.8 หมื่นลบ.</div>
+                </div>
+                <div class="story-arrow"><i class="fas fa-chevron-right"></i></div>
+                <div class="story-step">
+                    <div class="story-step-num">Step 04</div>
+                    <div class="story-step-title">Context</div>
+                    <div class="story-step-sub">ความเสี่ยง AI พุ่งสูงขึ้น ภายใต้บริบทเสรีภาพที่ถูกจำกัด</div>
+                </div>
+                <div class="story-arrow"><i class="fas fa-chevron-right"></i></div>
+                <div class="story-step">
+                    <div class="story-step-num">Step 05</div>
+                    <div class="story-step-title">Insight</div>
+                    <div class="story-step-sub">ความรู้เท่าทันและสมดุลระหว่างความมั่นคงกับสิทธิ</div>
+                </div>
+            </div>
+
+            <!-- 4 Synthesized Insight Cards (Section 7.1 - 7.4) -->
+            <div class="synthesized-grid">
+                <div class="synth-card">
+                    <div class="synth-card-icon" style="background: rgba(248,113,113,0.15); color: var(--accent-red);">
+                        <i class="fas fa-newspaper"></i>
+                    </div>
+                    <h3 class="synth-card-title">7.1 Information Threat</h3>
+                    <span class="synth-card-source">ข้อค้นพบจาก Anti-Fake News Center (AFNC)</span>
+                    <div class="synth-card-body">
+                        ข้อมูลบิดเบือนไม่ได้เกิดขึ้นแบบสุ่ม แต่มี <strong>รูปแบบเป้าหมายที่ชัดเจน</strong> ได้แก่ นโยบายและสวัสดิการภาครัฐ (6,272 ข่าว) และผลิตภัณฑ์สุขภาพ/ยารักษาโรค (3,788 ข่าว) สะท้อนว่าผู้ปล่อยข่าวอาศัยความกลัว ความหวัง และความไม่ชัดเจนของระเบียบรัฐเป็นช่องทางแพร่กระจาย
+                    </div>
+                </div>
+
+                <div class="synth-card">
+                    <div class="synth-card-icon" style="background: rgba(251,146,60,0.15); color: var(--accent-orange);">
+                        <i class="fas fa-coins"></i>
+                    </div>
+                    <h3 class="synth-card-title">7.2 Financial Threat</h3>
+                    <span class="synth-card-source">ข้อค้นพบจาก Anti Online Scam Center (ACSC)</span>
+                    <div class="synth-card-body">
+                        เกิด <strong>Volume vs Value Mismatch</strong> อย่างชัดเจน การหลอกซื้อขายสินค้าออนไลน์มีจำนวนคดีมากที่สุด (>75%) แต่สร้างความเสียหายต่อคดีน้อย ในทางตรงกันข้าม การหลอกลงทุนผ่านคอมพิวเตอร์และข่มขู่ทางโทรศัพท์ มีจำนวนคดีน้อยกว่าแต่สร้างความเสียหายหลักหมื่นล้านบาท
+                    </div>
+                </div>
+
+                <div class="synth-card">
+                    <div class="synth-card-icon" style="background: rgba(79,140,255,0.15); color: var(--accent-blue);">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <h3 class="synth-card-title">7.3 AI Risk</h3>
+                    <span class="synth-card-source">ข้อค้นพบจาก AI Incident Database (AIID)</span>
+                    <div class="synth-card-body">
+                        เทคโนโลยี AI กำลังถูก <strong>อาวุธภาพ (Weaponized) โดยผู้ไม่หวังดี</strong> เหตุการณ์ความเสียหายจาก AI เพิ่มขึ้นอย่างก้าวกระโดดตั้งแต่ปี 2022 โดยภัยสำคัญที่สุดคือ Malicious Misuse และ Deepfake (โคลนเสียงและหน้า) ซึ่งลดต้นทุนในการสร้างข่าวปลอมและการหลอกลวงให้แนบเนียนยิ่งขึ้น
+                    </div>
+                </div>
+
+                <div class="synth-card">
+                    <div class="synth-card-icon" style="background: rgba(45,212,191,0.15); color: var(--accent-teal);">
+                        <i class="fas fa-globe"></i>
+                    </div>
+                    <h3 class="synth-card-title">7.4 Internet Environment</h3>
+                    <span class="synth-card-source">ข้อค้นพบจาก Freedom on the Net (Freedom House)</span>
+                    <div class="synth-card-body">
+                        ภัยดิจิทัลทั้งหมดเกิดขึ้นภายใต้สภาพแวดล้อมที่ <strong>ประเทศไทยจัดอยู่ในกลุ่ม "ไม่เสรี" (Not Free: 39/100)</strong> โดยมีคะแนนด้านสิทธิผู้ใช้งาน (User Rights) ต่ำเป็นพิเศษ (8/40) ชี้ให้เห็นความท้าทายในการบังคับใช้กฎหมายปราบปรามภัยไซเบอร์โดยไม่ละเมิดสิทธิเสรีภาพของพลเมือง
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recommendations for 3 Stakeholders (Section 7.5) -->
+            <div class="recommendations-box">
+                <h3><i class="fas fa-compass"></i> ข้อเสนอแนะเชิงนโยบายและการปฏิบัติ (Actionable Recommendations)</h3>
+                <div class="rec-grid">
+                    <div class="rec-card" style="border-left-color: var(--accent-green);">
+                        <h4><i class="fas fa-user-shield" style="color: var(--accent-green);"></i> สำหรับประชาชน (Citizens)</h4>
+                        <p><strong>สร้างภูมิคุ้มกันดิจิทัล (Digital Literacy):</strong> ตรวจสอบแหล่งที่มาก่อนแชร์ โดยเฉพาะข่าวนโยบายรัฐและสุขภาพ ตระหนักรู้ว่า "ของถูกเกินจริงไม่มีอยู่จริง" ระวังการหลอกลงทุนที่การันตีผลตอบแทน และระมัดระวังการสนทนาทางเสียงหรือวิดีโอที่อาจใช้ Deepfake ปลอมแปลงบุคคลใกล้ชิด</p>
+                    </div>
+
+                    <div class="rec-card" style="border-left-color: var(--accent-blue);">
+                        <h4><i class="fas fa-server" style="color: var(--accent-blue);"></i> สำหรับผู้ให้บริการแพลตฟอร์ม (Platforms)</h4>
+                        <p><strong>รับผิดชอบและตอบสนองทันท่วงที:</strong> พัฒนาระบบตรวจสอบเนื้อหาหลอกลวงและโฆษณาปลอมบนแพลตฟอร์ม ปรับใช้เครื่องมือตรวจจับสื่อสังเคราะห์ (Synthetic Media Detection) และสร้างช่องทางส่งต่อข้อมูลคดีฉ้อโกงแก่หน่วยงานกำกับดูแลอย่างรวดเร็วเพื่อระงับความเสียหาย</p>
+                    </div>
+
+                    <div class="rec-card" style="border-left-color: var(--accent-purple);">
+                        <h4><i class="fas fa-landmark" style="color: var(--accent-purple);"></i> สำหรับภาครัฐและผู้กำหนดนโยบาย (Policy Makers)</h4>
+                        <p><strong>รักษาจุดสมดุลระหว่างความปลอดภัยและสิทธิ:</strong> มุ่งเน้นการปราบปรามขบวนการอาชญากรรมทางเทคโนโลยีที่เป็นระบบมากกว่าการดำเนินคดีกับผู้ใช้อินเทอร์เน็ตทั่วไป คุ้มครองสิทธิความเป็นส่วนตัวและข้อมูลส่วนบุคคล และยกระดับการทำงานร่วมกับนานาชาติในการรับมือภัย AI ข้ามพรมแดน</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Final Conclusion Message (Section 7.5) -->
+            <div class="data-note" style="background: rgba(167, 139, 250, 0.08); border-color: rgba(167, 139, 250, 0.25);">
+                <i class="fas fa-quote-left" style="color: var(--accent-purple); font-size: 20px;"></i>
+                <p style="font-size: 14px; line-height: 1.7; color: var(--text-primary);">
+                    <strong>บทสรุปสุดท้าย:</strong> ภัยคุกคามทางดิจิทัลทั้ง 4 ชุดข้อมูลไม่ได้ทำงานแยกส่วนกัน ข่าวปลอม (AFNC) และสื่อสังเคราะห์ AI (AIID) คือเครื่องมือล่อลวงที่ขับเคลื่อนอาชญากรรมทางการเงิน (ACSC) ทั้งหมดนี้เกิดขึ้นในระบบนิเวศข้อมูลที่กฎหมายและการคุ้มครองสิทธิ (Freedom on the Net) จำเป็นต้องพัฒนาให้ทันท่วงที การแก้ปัญหาจึงไม่ใช่เพียงการปิดกั้น แต่คือการสร้างความโปร่งใส ความรู้เท่าทัน และการคุ้มครองสิทธิของประชาชนไปพร้อมกัน
+                </p>
+            </div>
+
+            <div class="page-footer-source">
+                <strong>Data Synthesis Project:</strong> Digital Threats & Internet Freedom | <strong>Branch:</strong> kp | <strong>Specification:</strong> handoff_kp1.md
+            </div>
+        </section>
+    </main>
+
+    <!-- Data & Application Scripts -->
+    <script src="data.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
