@@ -1,22 +1,42 @@
 # Digital Threats & Internet Freedom Dashboard
-## โครงงาน Data Visualization: ภัยคุกคามในโลกดิจิทัลกับเสรีภาพอินเทอร์เน็ต (3-Tab Pastel Edition - handoff_kp3)
+## โครงงาน Data Visualization: ภัยคุกคามในโลกดิจิทัลกับเสรีภาพอินเทอร์เน็ต (Actionable Insights & Flexible Interactivity Edition)
 
-> **Branch:** `kp`  
-> **Specification Reference:** [`handoff_kp3.md`](./handoff_kp3.md) (พัฒนาต่อยอดจาก [`handoff_kp2.md`](./handoff_kp2.md) และ [`handoff_kp1.md`](./handoff_kp1.md))  
-> **Live Public URL:** <a href="https://digital-threats-internet-freedom-1.vercel.app/" target="_blank">Dashboard</a>
+> **Specification Reference:** [`dashboard_revision_handoff.md`](./dashboard_revision_handoff.md) (พัฒนาต่อยอดจาก [`handoff_kp3.md`](./handoff_kp3.md), [`handoff_kp2.md`](./handoff_kp2.md), และ [`handoff_kp1.md`](./handoff_kp1.md))  
+> **Branch:** `main`  
+> **Live Public URL:** <a href="https://digital-threats-internet-freedom-1.vercel.app/" target="_blank">Dashboard</a>  
 > **Local URL:** [http://localhost:8000](http://localhost:8000)
 
 ---
 
-### ภาพรวมการปรับปรุงตามข้อกำหนด handoff_kp3
+### ภาพรวมการปรับปรุงตามข้อกำหนด dashboard_revision_handoff.md
 
-แดชบอร์ดนี้สร้างขึ้นตามข้อกำหนด **`handoff_kp3.md`** บนสถาปัตยกรรม **3-Tab Pastel Architecture** พร้อมด้วยฟังก์ชันวิเคราะห์ระดับสูงและการแสดงผลข้อมูลแบบสมบูรณ์:
+แดชบอร์ดนี้ได้รับการพัฒนาปรับปรุงให้ตอบโจทย์ **"การวิเคราะห์ความเชื่อมโยง (Actionable Insights)"** และ **"การโต้ตอบที่ยืดหยุ่น (Flexible Interactivity)"** ตามข้อกำหนดใน `dashboard_revision_handoff.md`:
 
-1. **Global Filter Bar**: แถบตัวกรองระดับ Global หัวหน้าเว็บสำหรับกรองช่วงเวลา (Time Filter: All, H1 2026, H2 2026), ภูมิศาสตร์ (Global vs ASEAN), และคุณภาพข้อมูล (Data Quality) พร้อมปุ่ม Reset All Filters
-2. **Direct Data Labels บนทุกกราฟ**: แสดงตัวเลขจริง ($N$), สัดส่วน (%), มูลค่าเงิน (฿), และอัตราเติบโต (YoY) บนแท่งกราฟ จุดข้อมูล และ Slice ชาร์ตทันที ไม่ต้องรอ Hover Tooltip
-3. **Statistical Stat Badges**: แสดงค่าสถิติเชิงลึก เช่น ค่าเฉลี่ยรายสัปดาห์ ($\mu$), มัธยฐาน ($\tilde{x}$), และสัปดาห์ที่เกิดวิกฤตสูงสุด (Peak Week 2026-08-16: 79,311 คดี / ฿2,775M)
-4. **Bidirectional Cross-Filtering**: คลิกจุดข้อมูลบนกราฟ (เช่น แท่งเดือน หรือประเภทกลโกง) เพื่อกรองและไฮไลต์ข้อมูลในตารางและชาร์ตอื่น ๆ แบบเรียลไทม์
-5. **Interactive Case Study Modal**: คลิกที่เซลล์ Heatmap (Chart 3.5) เพื่อเปิดหน้าต่าง Modal แสดงกรณีศึกษาจริงจาก AI Incident Database
+1. **จุดตัด AI-Driven Fraud (AI x ACSC — Chart 1.1):**
+   * วิเคราะห์สัดส่วนความเสียหายจากมิจฉาชีพที่ใช้เทคโนโลยี AI (Deepfake, AI Voice Cloning, Trading Bots, Synthetic Identity) คิดเป็น **฿3.25 พันล้านบาท (17.9%)** จากยอดความเสียหายรวม ฿18.18 พันล้านบาท เทียบกับการหลอกลวงทั่วไป **฿14.93 พันล้านบาท (82.1%)**
+   * กราฟ Donut Chart ทำงานเชื่อมโยงแบบ Cross-filtering กับกราฟ Threat Category Breakdown (Chart 1.2)
+2. **ข้อมูลประชากรศาสตร์และพื้นที่ (Demographics Target Profile — Section 2.5):**
+   * **Chart 2.5A:** วิเคราะห์กลุ่มอายุของผู้เสียหายเปรียบเทียบระหว่างสัดส่วนคดี (%) กับมูลค่าความเสียหายเฉลี่ย (฿/คดี จากเฉลี่ยภาพรวม ฿49,498) ชี้ให้เห็นว่าวัยทำงาน (25–34 ปี) มีจำนวนคดีสูงสุด (38.5%) แต่ผู้สูงวัย (55 ปีขึ้นไป) มีมูลค่าสูญเสียเฉลี่ยสูงสุดถึง **฿112,400 บาท/คดี**
+   * **Chart 2.5B:** พื้นที่ที่มีการแจ้งความคดีออนไลน์สูงสุด 5 อันดับแรก (กทม. 27.8%, เชียงใหม่ 8.4%, ชลบุรี 7.9%, นนทบุรี 6.5%, ขอนแก่น 4.8%)
+3. **การวิเคราะห์ความสัมพันธ์ Freedom vs. Threats (Scatter Analysis — Chart 3.4):**
+   * เปรียบเทียบคะแนน Internet Freedom Score (แกน X) กับดัชนี Cyber Threat & Scam Severity (แกน Y) ของ 19 ประเทศ
+   * แสดงบทวิเคราะห์เชิงประจักษ์ (Empirical Insight): *"ประเทศที่ควบคุมอินเทอร์เน็ตเข้มงวด (Not Free เช่น เมียนมา เสรีภาพ 9/100, กัมพูชา 43/100) มิได้ลดภัยคุกคามไซเบอร์ หากแต่กลายเป็นฐานที่ตั้งของ Scam Hubs และแก๊งคอลเซ็นเตอร์ข้ามชาติที่ส่งผลกระทบต่อไทย (เสรีภาพ 39/100, ดัชนีภัย 82)"*
+4. **ปรับโฟกัสแผนที่เสรีภาพเน็ต (Chart 1.4):**
+   * ปรับตั้งค่าเริ่มต้นให้โฟกัสเฉพาะภูมิภาคอาเซียน (ASEAN Focus) เพื่อเปรียบเทียบบริบทประเทศเพื่อนบ้าน
+   * พร้อมปุ่ม Toggle สลับระหว่าง **"โฟกัสอาเซียน"** และ **"มุมมองโลก (Global View)"**
+5. **Mobile Panel Switcher สำหรับ Tab 2:**
+   * รองรับการสลับมุมมองกราฟคู่ Synchronized Time Series บนหน้าจอขนาดเล็ก (ทั้ง 2 แผง / เฉพาะ AFNC / เฉพาะ ACSC)
+6. **Global Filter Bar ที่ทำงานอย่างสมบูรณ์:**
+   * กรองช่วงเวลา (Time Horizon: 12 เดือนล่าสุด, 2026, 2025, 2024, 2020–2024, ทั้งหมด)
+   * กรองขอบเขตภูมิศาสตร์ (Scope: โลก & ไทย, เน้นเฉพาะไทย, เปรียบเทียบในอาเซียน)
+   * กรองคุณภาพข้อมูล (Quality: ข้อมูลทั้งหมด, เฉพาะแถวที่ตรวจสอบแล้ว Validated Only)
+   * ปุ่มรีเซ็ตตัวกรองรวม (Reset Global Filters)
+7. **ระบบโต้ตอบข้ามกราฟอย่างสมบูรณ์ในทุกแท็บ (Full Cross-Filtering):**
+   * ทุกกราฟใน Tab 1, Tab 2, และ Tab 3 เชื่อมโยงกันอย่างยืดหยุ่น สามารถคลิกเพื่อไฮไลต์ กรองข้อมูล และคำนวณสถิติสัมพันธ์กันได้ทันที
+
+---
+
+### โครงสร้างและองค์ประกอบของแดชบอร์ด
 
 ```
  ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -32,8 +52,10 @@
 │ Visual Overview │           │ Thailand Threat │           │ Global AI Risks │
 │  & Landscape    │           │ & Financial Loss│           │ & Freedom Context│
 └─────────────────┘           └─────────────────┘           └─────────────────┘
- (Visual-Heavy /               (AFNC Fake News +             (AI Incident DB +
- Charts & Metrics)             ACSC Scams Link)              Freedom House Link)
+ (AI Fraud Donut,              (Synchronized Time,           (Freedom vs Threats
+ Taxonomy Bar,                 Loss vs Volume,               Scatter, Intent Line,
+ 4 Sparklines,                 Demographics 2.5A/B,          Domains Bar, Heatmap
+ ASEAN Focus Map)              Weekly Table 2.4)             & Case Studies Modal)
 ```
 
 ---
@@ -49,41 +71,8 @@
 | **Accent Pink** | `#FADBD8` / `#E6B0AA` | AFNC / ข่าวปลอม (Fake Verdict) / User Rights |
 | **Accent Mint/Teal** | `#D4EFDF` / `#7DCEA0` | ข่าวจริง (True Verdict) / เสรีภาพระดับ Free |
 | **Accent Blue** | `#D6EAF8` / `#85C1E9` | คดีหลอกลวง ACSC / AI Incidents / Obstacles to Access |
-| **Accent Lavender**| `#EBDEF0` / `#BB8FCE` | ความเสี่ยง AI / Limits on Content |
+| **Accent Lavender**| `#EBDEF0` / `#BB8FCE` | ความเสี่ยง AI / Limits on Content / Deepfake Tag |
 | **Accent Peach/Yellow**| `#FCF3CF` / `#F7DC6F` | ความเสียหายทางการเงิน / ข่าวบิดเบือน / Partly Free |
-
----
-
-### รายละเอียดของแต่ละแท็บ (Detailed Tab Specifications)
-
-#### 1. TAB 1: Visual Overview & Landscape (ภาพรวมภัยดิจิทัล)
-* **ปัญหาหลักประจำแท็บ:** *"เมื่อมองภาพรวม ตัวชี้วัดสำคัญของภัยดิจิทัลทั้ง 4 ด้านมีแนวโน้มและขนาดของปัญหาในเชิงโครงสร้างอย่างไร?"*
-* **องค์ประกอบ:**
-  - **5 KPI Cards พร้อม Delta Badges:** AFNC ข้อมูลตรวจสอบ (17,726 รายการ), ACSC คดีหลอกลวง (381,390 คดี), ACSC ความเสียหาย (฿18.18 พันล้าน), AI Incidents (1,775 เหตุการณ์), เสรีภาพเน็ตไทย (39/100, Not Free)
-  - **Chart 1.1 — Multi-Dataset Dual-Axis Trend:** กราฟเส้นเปรียบเทียบแนวโน้มข่าวปลอม AFNC กับคดี ACSC รายเดือน พร้อมจุด Callout แสดง Peak Week
-  - **Chart 1.2 — Threat Landscape Distribution:** กราฟแท่งแนวนอนแสดงสัดส่วนคดีหลอกลวง พร้อมตัวเลข N และ % บนแท่งกราฟ
-  - **Chart 1.3 — Risk Distribution Sparklines:** 4 การ์ดสรุปสัดส่วนสำคัญของทั้ง 4 ชุดข้อมูล
-  - **Chart 1.4 — Global Freedom Overview Map:** แผนที่โลกพาสเทลแสดงระดับเสรีภาพอินเทอร์เน็ต
-
-#### 2. TAB 2: Thailand Threats & Financial Loss (ภัยดิจิทัลและผลกระทบในไทย)
-* **ปัญหาหลักประจำแท็บ:** *"ข่าวปลอม/ข้อมูลบิดเบือนกับคดีการหลอกลวงออนไลน์ในประเทศไทย มีความสอดคล้องกันตามช่วงเวลาอย่างไร และหมวดหมู่ใดสร้างความเสียหายทางการเงินสูงสุด?"*
-* **องค์ประกอบ:**
-  - **Stat Summary Banner:** Mean cases/wk: 7,946 | Mean loss/wk: ฿378.7M | Mean loss/case: ฿49,498 | Median: ฿49,889 | Peak Week: 2026-08-16 (79,311 คดี / ฿2,775M)
-  - **Chart 2.1 — Dual-Panel Synchronized Time Series:** เปรียบเทียบปริมาณข่าวปลอม AFNC ด้านบน และคดีหลอกลวง ACSC ด้านล่าง
-  - **Chart 2.2 — AFNC Verdict Composition:** กราฟแท่ง 100% Stacked Bar แสดงสัดส่วนข่าวปลอม (65.8%), ข่าวจริง (26.3%), ข่าวบิดเบือน (7.9%) รายเดือนพร้อมฉลาก %
-  - **Chart 2.3 — Financial Loss vs Case Volume (The Paradox):** กราฟแท่งเปรียบเทียบชี้ชัดว่าหลอกซื้อขายสินค้าคดีสูงสุด (75%) แต่หลอกลงทุนสร้างความเสียหายสูงสุด (฿9.00 พันล้าน หรือ 49.5%)
-  - **Chart 2.4 — Topic Matrix:** กราฟแท่งเปรียบเทียบหมวดหมู่ AFNC กับ ACSC
-  - **ตาราง 2.4 — Interactive Case & Financial Loss Detail Table:** ตารางค้นหาข้อมูล 48 สัปดาห์ พร้อม Data Bars และไฮไลต์แถวที่ความเสียหายเกินค่าเฉลี่ย
-
-#### 3. TAB 3: Global AI Risks & Freedom Context (ความเสี่ยง AI & บริบทเสรีภาพ)
-* **ปัญหาหลักประจำแท็บ:** *"เหตุการณ์ความเสี่ยงจาก AI ในระดับโลกมีรูปแบบใด และประเทศไทยมีระดับเสรีภาพอินเทอร์เน็ตอยู่ในจุดใดเมื่อเทียบกับภูมิภาคและระดับโลก?"*
-* **องค์ประกอบ:**
-  - **Chart 3.1 — Interactive Global Freedom Map:** แผนที่โลกคลิกที่ประเทศเพื่อดูคะแนนย่อย 3 เสาหลัก
-  - **Chart 3.2 — Thailand vs ASEAN Comparison:** กราฟแท่งเปรียบเทียบคะแนนไทย (39, Not Free) เทียบกับค่าเฉลี่ยอาเซียน (41.8)
-  - **Chart 3.3 — Thailand Freedom Component Breakdown:** จำแนกคะแนนย่อย 3 เสาหลัก (Access: 14/25, Content: 14/35, User Rights: 8/40 - Critical Deficit)
-  - **Chart 3.4 — AI Incident Trends & Intentional Harm:** กราฟเส้นแสดงการพุ่งสูงขึ้นของภัยที่เกิดจากเจตนา (Intentional) แซงหน้าความผิดพลาดของระบบ (Unintentional) ตั้งแต่ปี 2022 (+73.7% YoY)
-  - **Chart 3.5 — Risk Domain × Intent Matrix Heatmap:** ฮีตแม็ป 2 มิติที่สามารถคลิกเซลล์เพื่อเปิดดู Case Study Modal
-  - **ตาราง 3.6 — AI Incidents & Case Explorer Table:** ตารางสืบค้นเหตุการณ์ AI และกรณีศึกษา
 
 ---
 
@@ -91,16 +80,10 @@
 
 #### ลิงก์สาธารณะ (Public Live Access)
 สามารถเข้าชมแดชบอร์ดออนไลน์ผ่านเบราว์เซอร์ได้ทันทีโดยไม่ต้องรันเซิร์ฟเวอร์เอง:
-👉 **[https://stones-enjoying-crown-relation.trycloudflare.com](https://stones-enjoying-crown-relation.trycloudflare.com)**
+👉 **<a href="https://digital-threats-internet-freedom-1.vercel.app/" target="_blank">Digital Threats & Internet Freedom Dashboard</a>**
 
 #### รันผ่าน Local Web Server
 ```bash
 python -m http.server 8000
 ```
-เปิดเบราว์เซอร์ไปที่ `http://localhost:8000`
-
-#### การประมวลผลข้อมูลใหม่ (Data Bundle Regeneration)
-```bash
-python generate_dashboard_data.py
-```
-สคริปต์จะคำนวณค่าสถิติทั้งหมดและสร้างไฟล์ `data.js` และ `dashboard_data.json` อัตโนมัติ
+เปิดเบราว์เซอร์ไปที่ `http://localhost:8000` (หรือเปิดไฟล์ [index.html](file:///d:/finalajt/Final_DataViz/index.html) ได้โดยตรงแบบออฟไลน์)

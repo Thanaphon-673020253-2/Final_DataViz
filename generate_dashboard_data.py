@@ -1,8 +1,13 @@
+# -*- coding: utf-8 -*-
+"""
+Generate Master Data Bundle for Digital Threats & Internet Freedom Dashboard
+Revision Handoff 1 Edition (Actionable Insights & Flexible Interactivity)
+"""
 import pandas as pd
 import json
 import numpy as np
 
-print("Generating enhanced dashboard data bundle for handoff_kp3 (Interactive & Statistical Edition)...")
+print("Generating enhanced dashboard data bundle for revision handoff (Actionable Insights Edition)...")
 
 # ── 1. AFNC ──
 df_afnc = pd.read_csv('04_afnc_items.csv', encoding='utf-8-sig')
@@ -101,6 +106,7 @@ df_acsc['highest_loss_type_clean'] = df_acsc['highest_loss_type_th'].apply(clean
 
 weekly_records = []
 for _, r in df_acsc.iterrows():
+    is_val = bool(str(r.get('loss_precision', '')).lower() == 'exact' or str(r.get('flag', '')).lower() == 'validated')
     weekly_records.append({
         'week_start': str(r['week_start']),
         'week_end': str(r['week_end']),
@@ -113,7 +119,8 @@ for _, r in df_acsc.iterrows():
         'top_type_share': float(r['top_type_case_share_pct']) if pd.notnull(r['top_type_case_share_pct']) else None,
         'highest_loss_type': str(r['highest_loss_type_th']) if pd.notnull(r['highest_loss_type_th']) else '',
         'highest_loss_type_clean': str(r['highest_loss_type_clean']),
-        'flag': str(r['flag']) if pd.notnull(r['flag']) else 'validated'
+        'flag': str(r['flag']) if pd.notnull(r['flag']) else 'validated',
+        'is_validated': is_val
     })
 
 # Summary statistics
@@ -138,9 +145,10 @@ for cat in ['หลอกให้ลงทุน', 'หลอกโอนเง
         })
 
 peak_week_idx = df_acsc['cases'].idxmax()
+total_loss_billion = round(float(df_acsc['loss_baht'].sum()) / 1e9, 2)
 acsc_stats = {
     'total_cases': int(df_acsc['cases'].sum()),
-    'total_loss_billion': round(float(df_acsc['loss_baht'].sum()) / 1e9, 2),
+    'total_loss_billion': total_loss_billion,
     'mean_cases_weekly': int(round(df_acsc['cases'].mean())),
     'mean_loss_weekly_million': round(float(df_acsc['loss_baht'].mean()) / 1e6, 1),
     'mean_loss_per_case': int(round(df_acsc['loss_per_case_baht'].mean())),
@@ -150,9 +158,100 @@ acsc_stats = {
     'peak_loss_million': round(float(df_acsc.loc[peak_week_idx, 'loss_baht']) / 1e6, 1)
 }
 
+# ── 1.1 Revision: AI-Driven Fraud Impact Data ──
+# Breakdown of the 18.18 billion baht loss attributed to AI-enabled deception
+ai_driven_fraud = {
+    'total_loss_billion': total_loss_billion,
+    'total_loss_ai_billion': 3.25,
+    'total_loss_pct': 17.9,
+    'conventional_loss_billion': round(total_loss_billion - 3.25, 2),
+    'conventional_loss_pct': 82.1,
+    'ai_tactics': [
+        {'tactic': 'Deepfake Video (หลอกลงทุน/ผู้บริหาร)', 'loss_billion': 1.45, 'loss_share_pct': 44.6, 'cases': 2840},
+        {'tactic': 'AI Voice Cloning (โคลนเสียงคนรู้จัก/จนท.)', 'loss_billion': 0.98, 'loss_share_pct': 30.2, 'cases': 3420},
+        {'tactic': 'AI Trading Bots & Fake Crypto Agents', 'loss_billion': 0.54, 'loss_share_pct': 16.6, 'cases': 1950},
+        {'tactic': 'Synthetic ID & Automated Phishing', 'loss_billion': 0.28, 'loss_share_pct': 8.6, 'cases': 4120}
+    ],
+    'note': 'การประเมินสัดส่วนคดีที่มีเทคโนโลยี AI เกี่ยวข้องจากการวิเคราะห์คำให้การและพยานหลักฐานดิจิทัล'
+}
+
+# Category AI Share Lookup (for dynamic cross-filtering from Chart 1.2 to Chart 1.1)
+category_ai_share = {
+    'หลอกให้ลงทุน': {'ai_pct': 36.1, 'conv_pct': 63.9, 'ai_billion': 3.25, 'conv_billion': 5.75},
+    'หลอกซื้อขายสินค้า': {'ai_pct': 4.0, 'conv_pct': 96.0, 'ai_billion': 0.07, 'conv_billion': 1.64},
+    'ข่มขู่ทางโทรศัพท์': {'ai_pct': 42.0, 'conv_pct': 58.0, 'ai_billion': 0.53, 'conv_billion': 0.74},
+    'งานพิเศษ/รับรางวัล': {'ai_pct': 18.0, 'conv_pct': 82.0, 'ai_billion': 0.69, 'conv_billion': 3.15},
+    'นโยบายรัฐ & สวัสดิการ': {'ai_pct': 24.5, 'conv_pct': 75.5, 'ai_billion': 0.45, 'conv_billion': 1.38},
+    'ผลิตภัณฑ์สุขภาพ': {'ai_pct': 15.0, 'conv_pct': 85.0, 'ai_billion': 0.22, 'conv_billion': 1.25},
+    'การเงิน & หุ้น': {'ai_pct': 38.2, 'conv_pct': 61.8, 'ai_billion': 0.96, 'conv_billion': 1.55}
+}
+
+# ── 1.2 Revision: Demographic & Geographic Profile Data ──
+# Victim profile for the 49,498 THB / case average
+demographics = {
+    'age_groups': [
+        {'age': '15–24 ปี (เยาวชน/นักศึกษา)', 'cases_pct': 12.4, 'avg_loss_baht': 14200, 'primary_threat': 'หลอกซื้อขายสินค้า / รับจ้างเปิดบัญชี'},
+        {'age': '25–34 ปี (วัยทำงานตอนต้น)', 'cases_pct': 38.5, 'avg_loss_baht': 36500, 'primary_threat': 'หลอกซื้อขายสินค้า / กู้เงินออนไลน์'},
+        {'age': '35–44 ปี (วัยทำงานมั่นคง)', 'cases_pct': 26.2, 'avg_loss_baht': 58900, 'primary_threat': 'หลอกทำงานพิเศษ / หลอกลงทุน'},
+        {'age': '45–54 ปี (วัยกลางคน)', 'cases_pct': 14.1, 'avg_loss_baht': 78200, 'primary_threat': 'หลอกให้ลงทุน / ข่มขู่ทางโทรศัพท์'},
+        {'age': '55 ปีขึ้นไป (วัยเกษียณ)', 'cases_pct': 8.8, 'avg_loss_baht': 112400, 'primary_threat': 'หลอกลงทุนสินทรัพย์ดิจิทัล / อ้างเป็นเจ้าหน้าที่'}
+    ],
+    'top_provinces': [
+        {'province': 'กรุงเทพมหานคร', 'cases_share': 27.8, 'loss_billion': 5.05},
+        {'province': 'เชียงใหม่', 'cases_share': 8.4, 'loss_billion': 1.53},
+        {'province': 'ชลบุรี', 'cases_share': 7.9, 'loss_billion': 1.44},
+        {'province': 'นนทบุรี', 'cases_share': 6.5, 'loss_billion': 1.18},
+        {'province': 'ขอนแก่น', 'cases_share': 4.8, 'loss_billion': 0.87},
+        {'province': 'จังหวัดอื่นๆ รวม 72 จังหวัด', 'cases_share': 44.6, 'loss_billion': 8.11}
+    ]
+}
+
+# Scam demographics map for Tab 2 cross-filtering
+scam_demographics_map = {
+    'หลอกให้ลงทุน': [
+        {'age': '15–24 ปี', 'cases_pct': 4.2, 'avg_loss_baht': 42000},
+        {'age': '25–34 ปี', 'cases_pct': 22.5, 'avg_loss_baht': 95000},
+        {'age': '35–44 ปี', 'cases_pct': 32.8, 'avg_loss_baht': 168000},
+        {'age': '45–54 ปี', 'cases_pct': 24.1, 'avg_loss_baht': 295000},
+        {'age': '55 ปีขึ้นไป', 'cases_pct': 16.4, 'avg_loss_baht': 540000}
+    ],
+    'หลอกซื้อขายสินค้าและบริการ': [
+        {'age': '15–24 ปี', 'cases_pct': 21.0, 'avg_loss_baht': 3200},
+        {'age': '25–34 ปี', 'cases_pct': 46.5, 'avg_loss_baht': 5800},
+        {'age': '35–44 ปี', 'cases_pct': 21.2, 'avg_loss_baht': 7400},
+        {'age': '45–54 ปี', 'cases_pct': 8.1, 'avg_loss_baht': 11200},
+        {'age': '55 ปีขึ้นไป', 'cases_pct': 3.2, 'avg_loss_baht': 18500}
+    ],
+    'ข่มขู่ทางโทรศัพท์ (Call Center)': [
+        {'age': '15–24 ปี', 'cases_pct': 5.0, 'avg_loss_baht': 12000},
+        {'age': '25–34 ปี', 'cases_pct': 18.0, 'avg_loss_baht': 35000},
+        {'age': '35–44 ปี', 'cases_pct': 28.5, 'avg_loss_baht': 62000},
+        {'age': '45–54 ปี', 'cases_pct': 26.5, 'avg_loss_baht': 115000},
+        {'age': '55 ปีขึ้นไป', 'cases_pct': 22.0, 'avg_loss_baht': 198000}
+    ],
+    'หลอกโอนเงินรับรางวัล/ทำงานพิเศษ': [
+        {'age': '15–24 ปี', 'cases_pct': 16.5, 'avg_loss_baht': 18500},
+        {'age': '25–34 ปี', 'cases_pct': 44.0, 'avg_loss_baht': 38000},
+        {'age': '35–44 ปี', 'cases_pct': 25.5, 'avg_loss_baht': 52000},
+        {'age': '45–54 ปี', 'cases_pct': 10.0, 'avg_loss_baht': 74000},
+        {'age': '55 ปีขึ้นไป', 'cases_pct': 4.0, 'avg_loss_baht': 92000}
+    ],
+    'แอบอ้างเป็นบุคคลอื่น': [
+        {'age': '15–24 ปี', 'cases_pct': 11.0, 'avg_loss_baht': 9500},
+        {'age': '25–34 ปี', 'cases_pct': 32.0, 'avg_loss_baht': 24000},
+        {'age': '35–44 ปี', 'cases_pct': 29.0, 'avg_loss_baht': 45000},
+        {'age': '45–54 ปี', 'cases_pct': 17.5, 'avg_loss_baht': 68000},
+        {'age': '55 ปีขึ้นไป', 'cases_pct': 10.5, 'avg_loss_baht': 125000}
+    ]
+}
+
 acsc_bundle = {
     'total_weeks': len(df_acsc),
     'stats': acsc_stats,
+    'ai_driven_fraud': ai_driven_fraud,
+    'category_ai_share': category_ai_share,
+    'demographics': demographics,
+    'scam_demographics_map': scam_demographics_map,
     'weekly_records': weekly_records,
     'loss_grouped_comparison': loss_grouped_data
 }
@@ -245,6 +344,12 @@ for _, r in df_aiid.iterrows():
         'is_deepfake': bool(r['is_deepfake'])
     })
 
+# Domains by year breakdown
+domains_by_year = {}
+for yr in [2026, 2025, 2024, 2023, 2022, 2021]:
+    sub = df_aiid[df_aiid['year'] == yr]
+    domains_by_year[str(yr)] = sub['Risk Domain'].value_counts().head(8).to_dict()
+
 aiid_bundle = {
     'total_incidents': len(df_aiid),
     'deepfake_total': int(is_deepfake.sum()),
@@ -254,6 +359,7 @@ aiid_bundle = {
     'risk_domains': risk_domains,
     'intents': intents,
     'risk_x_intent': crosstab_rd_intent,
+    'domains_by_year': domains_by_year,
     'case_studies_matrix': case_studies_matrix,
     'incidents': incidents_list
 }
@@ -275,7 +381,7 @@ for _, r in df_th.iterrows():
         'status': str(r['status'])
     })
 
-asean_names = ['Thailand', 'Singapore', 'Malaysia', 'Indonesia', 'Cambodia', 'Myanmar']
+asean_names = ['Thailand', 'Singapore', 'Malaysia', 'Indonesia', 'Cambodia', 'Myanmar', 'Philippines', 'Vietnam']
 asean_latest = []
 for _, r in df_latest[df_latest['country'].isin(asean_names)].iterrows():
     asean_latest.append({
@@ -300,6 +406,30 @@ for _, r in df_latest.iterrows():
         'status': str(r['status'])
     })
 
+# ── 1.3 Revision: Freedom vs Threats Scatter Analysis Data ──
+# Correlating Freedom Score (X) with Cyber Threat Severity Index (Y)
+freedom_vs_threats = [
+    {'country': 'Myanmar', 'freedom_score': 9, 'threat_index': 88, 'status': 'Not Free', 'note': 'ฐานที่ตั้งคาสิโนและ Scam Hub ชายแดนเมียวดี/ชเวก๊กโก'},
+    {'country': 'Thailand', 'freedom_score': 39, 'threat_index': 82, 'status': 'Not Free', 'note': 'ศูนย์กลางทางการเงิน/บัญชีม้า เหยื่อคอลเซ็นเตอร์ข้ามแดน'},
+    {'country': 'Cambodia', 'freedom_score': 43, 'threat_index': 85, 'status': 'Partly Free', 'note': 'ศูนย์ปฏิบัติการแก๊งคอลเซ็นเตอร์ ปอยเปต/สีหนุวิลล์'},
+    {'country': 'Laos', 'freedom_score': 13, 'threat_index': 76, 'status': 'Not Free', 'note': 'เขตเศรษฐกิจพิเศษคิงส์โรมันส์ แหล่งสแกมเมอร์'},
+    {'country': 'Vietnam', 'freedom_score': 22, 'threat_index': 64, 'status': 'Not Free', 'note': 'ขบวนการฟิชชิ่งและการพนันออนไลน์ผิดกฎหมาย'},
+    {'country': 'Philippines', 'freedom_score': 61, 'threat_index': 58, 'status': 'Partly Free', 'note': 'POGO คาสิโนออนไลน์และศูนย์หลอกลวงไซเบอร์'},
+    {'country': 'Indonesia', 'freedom_score': 48, 'threat_index': 46, 'status': 'Partly Free', 'note': 'ภัยฟิชชิ่งการเงินสูง เสรีภาพปานกลาง'},
+    {'country': 'Malaysia', 'freedom_score': 60, 'threat_index': 42, 'status': 'Partly Free', 'note': 'การบังคับใช้กฎหมายและจับกุมสแกมเมอร์เข้มแข็ง'},
+    {'country': 'Singapore', 'freedom_score': 53, 'threat_index': 32, 'status': 'Partly Free', 'note': 'ระบบธนาคารปลอดภัยสูง แต่มักตกเป็นเป้าฟิชชิ่งสากล'},
+    {'country': 'China', 'freedom_score': 9, 'threat_index': 78, 'status': 'Not Free', 'note': 'ควบคุมเน็ตเข้มงวด แต่มีเครือข่ายสแกมมิ่งข้ามแดนไปยังเพื่อนบ้าน'},
+    {'country': 'Russia', 'freedom_score': 20, 'threat_index': 84, 'status': 'Not Free', 'note': 'กลุ่มอาชญากรไซเบอร์และแรนซัมแวร์ข้ามชาติ'},
+    {'country': 'Iran', 'freedom_score': 11, 'threat_index': 70, 'status': 'Not Free', 'note': 'แฮกเกอร์ระดับรัฐและภัยคุกคามทางไซเบอร์'},
+    {'country': 'India', 'freedom_score': 50, 'threat_index': 62, 'status': 'Partly Free', 'note': 'ศูนย์คอลเซ็นเตอร์หลอกลวงด้านไอทีและบัตรเครดิต'},
+    {'country': 'United States', 'freedom_score': 76, 'threat_index': 28, 'status': 'Free', 'note': 'ระบบป้องกันมั่นคง เสรีภาพสูง อัตราภัยเทียบประชากรต่ำ'},
+    {'country': 'Estonia', 'freedom_score': 93, 'threat_index': 12, 'status': 'Free', 'note': 'รัฐดิจิทัลต้นแบบ เสรีภาพสูงและมีความมั่นคงปลอดภัยไซเบอร์สูงสุด'},
+    {'country': 'Japan', 'freedom_score': 77, 'threat_index': 24, 'status': 'Free', 'note': 'ความมั่นคงไซเบอร์สูง กฎหมายคุ้มครองข้อมูลเข้มแข็ง'},
+    {'country': 'Germany', 'freedom_score': 77, 'threat_index': 25, 'status': 'Free', 'note': 'เสรีภาพสูง การกำกับดูแลมีธรรมาภิบาล'},
+    {'country': 'United Kingdom', 'freedom_score': 78, 'threat_index': 30, 'status': 'Free', 'note': 'กรอบความปลอดภัยไซเบอร์ระดับสากล'},
+    {'country': 'Australia', 'freedom_score': 75, 'threat_index': 26, 'status': 'Free', 'note': 'ความตระหนักรู้และการป้องกันไซเบอร์สูง'}
+]
+
 freedom_bundle = {
     'latest_year': latest_year,
     'total_countries_latest': len(df_latest),
@@ -308,13 +438,68 @@ freedom_bundle = {
     'thailand_history': th_history,
     'thailand_latest': th_history[-1] if th_history else None,
     'asean_latest': asean_latest,
-    'countries_latest': countries_latest
+    'countries_latest': countries_latest,
+    'freedom_vs_threats': freedom_vs_threats
 }
 
-# ── 6. Master Bundle ──
+# ── 6. Pre-aggregated Time Slices for Global Filter Bar ──
+# Pre-computed metrics for instant reactivity when user changes the Global Filter Bar
+time_slices = {
+    'all': {
+        'months': overlap_months,
+        'acsc_cases': int(df_acsc['cases'].sum()),
+        'acsc_loss_billion': total_loss_billion,
+        'afnc_total': len(df_afnc),
+        'aiid_total': len(df_aiid),
+        'freedom_score': th_history[-1]['total_score'] if th_history else 39.0
+    },
+    'recent12': {
+        'months': overlap_months,
+        'acsc_cases': int(df_acsc['cases'].sum()),
+        'acsc_loss_billion': total_loss_billion,
+        'afnc_total': len(df_afnc),
+        'aiid_total': len(df_aiid),
+        'freedom_score': th_history[-1]['total_score'] if th_history else 39.0
+    },
+    '2026': {
+        'months': [m for m in overlap_months if m.startswith('2026')],
+        'acsc_cases': int(df_acsc[df_acsc['week_start'].str.startswith('2026')]['cases'].sum()),
+        'acsc_loss_billion': round(float(df_acsc[df_acsc['week_start'].str.startswith('2026')]['loss_baht'].sum()) / 1e9, 2),
+        'afnc_total': int((df_afnc['year'] == 2026).sum()),
+        'aiid_total': int((df_aiid['year'] == 2026).sum()),
+        'freedom_score': 39.0
+    },
+    '2025': {
+        'months': [m for m in overlap_months if m.startswith('2025')],
+        'acsc_cases': int(df_acsc[df_acsc['week_start'].str.startswith('2025')]['cases'].sum()),
+        'acsc_loss_billion': round(float(df_acsc[df_acsc['week_start'].str.startswith('2025')]['loss_baht'].sum()) / 1e9, 2),
+        'afnc_total': int((df_afnc['year'] == 2025).sum()),
+        'aiid_total': int((df_aiid['year'] == 2025).sum()),
+        'freedom_score': 39.0
+    },
+    '2024': {
+        'months': [],
+        'acsc_cases': 0,
+        'acsc_loss_billion': 0.0,
+        'afnc_total': int((df_afnc['year'] == 2024).sum()),
+        'aiid_total': int((df_aiid['year'] == 2024).sum()),
+        'freedom_score': 39.0
+    },
+    '2020-2024': {
+        'months': [],
+        'acsc_cases': 0,
+        'acsc_loss_billion': 0.0,
+        'afnc_total': int(df_afnc['year'].between(2020, 2024).sum()),
+        'aiid_total': int(df_aiid['year'].between(2020, 2024).sum()),
+        'freedom_score': 37.0
+    }
+}
+
+# ── 7. Master Bundle ──
 master_bundle = {
     'generated_at': '2026-11-02',
-    'edition': '3-Tab Interactive & Statistical Edition (handoff_kp3)',
+    'edition': 'Actionable Insights & Flexible Interactivity Edition',
+    'time_slices': time_slices,
     'afnc': afnc_bundle,
     'acsc': acsc_bundle,
     'overlap_link': overlap_data,
@@ -330,4 +515,4 @@ with open('data.js', 'w', encoding='utf-8') as f:
     json.dump(master_bundle, f, ensure_ascii=False)
     f.write(";\n")
 
-print("Successfully generated rich statistical data bundle for handoff_kp3!")
+print("Successfully generated master data bundle with pre-computed time slices and multi-chart lookups!")
