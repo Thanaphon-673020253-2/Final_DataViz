@@ -36,51 +36,94 @@
     </div>
 
     <div class="app-container">
-        <!-- Global Filter Bar (handoff_kp3 Section 1.1) -->
-        <div class="global-filter-bar">
-            <div class="filter-left-controls">
-                <div class="filter-pill">
-                    <i class="fas fa-calendar-alt"></i>
-                    <label>ช่วงเวลา (Time Horizon):</label>
-                    <select id="global-time-filter" onchange="applyGlobalFilters()">
-                        <option value="all">ทั้งหมด (All Time: 2010–2026)</option>
-                        <option value="recent12" selected>12 เดือนล่าสุด (พ.ย. 2568 – ต.ค. 2569)</option>
-                        <option value="2026">เฉพาะปี 2026</option>
-                        <option value="2025">เฉพาะปี 2025</option>
-                        <option value="2024">เฉพาะปี 2024</option>
-                        <option value="2020-2024">ช่วงโควิด-ฟื้นฟู (2020–2024)</option>
-                    </select>
+        <!-- Dashboard 2-Column Layout (Sidebar Filter on Left + Main Content on Right) -->
+        <div class="dashboard-layout">
+            <!-- Left Sidebar: Global Filter Panel -->
+            <aside class="dashboard-sidebar" id="dashboardSidebar">
+                <div class="sidebar-header">
+                    <div class="sidebar-badge">
+                        <i class="fas fa-sliders"></i>
+                        <span>GLOBAL FILTERS</span>
+                    </div>
+                    <h2 class="sidebar-title">ตัวกรองข้อมูล</h2>
+                    <p class="sidebar-desc">ปรับเปลี่ยนมุมมองและสถิติแบบไดนามิกทุกแท็บ</p>
                 </div>
 
-                <div class="filter-pill">
-                    <i class="fas fa-globe-asia"></i>
-                    <label>ขอบเขต (Scope):</label>
-                    <select id="global-geo-filter" onchange="applyGlobalFilters()">
-                        <option value="all" selected>Global & Thailand (ทั้งหมด)</option>
-                        <option value="thailand">เน้นเฉพาะประเทศไทย (Thailand Focus)</option>
-                        <option value="asean">เปรียบเทียบในอาเซียน (ASEAN Context)</option>
-                    </select>
+                <div class="sidebar-filter-list">
+                    <!-- Filter 1: Time Horizon -->
+                    <div class="sidebar-filter-item">
+                        <label class="sidebar-filter-label" for="global-time-filter">
+                            <i class="fas fa-calendar-alt"></i>
+                            <span>ช่วงเวลา (Time Horizon)</span>
+                        </label>
+                        <div class="sidebar-select-wrap">
+                            <select id="global-time-filter" class="sidebar-select" onchange="applyGlobalFilters()">
+                                <option value="all">ทั้งหมด (All Time: 2010–2026)</option>
+                                <option value="recent12" selected>12 เดือนล่าสุด (พ.ย. 68 – ต.ค. 69)</option>
+                                <option value="2026">เฉพาะปี 2026</option>
+                                <option value="2025">เฉพาะปี 2025</option>
+                                <option value="2024">เฉพาะปี 2024</option>
+                                <option value="2020-2024">ช่วงโควิด-ฟื้นฟู (2020–2024)</option>
+                            </select>
+                            <i class="fas fa-chevron-down select-chevron"></i>
+                        </div>
+                    </div>
+
+                    <!-- Filter 2: Scope -->
+                    <div class="sidebar-filter-item">
+                        <label class="sidebar-filter-label" for="global-geo-filter">
+                            <i class="fas fa-globe-asia"></i>
+                            <span>ขอบเขตข้อมูล (Scope)</span>
+                        </label>
+                        <div class="sidebar-select-wrap">
+                            <select id="global-geo-filter" class="sidebar-select" onchange="applyGlobalFilters()">
+                                <option value="all" selected>Global & Thailand (ทั้งหมด)</option>
+                                <option value="thailand">เน้นเฉพาะประเทศไทย (Thailand Focus)</option>
+                                <option value="asean">เปรียบเทียบในอาเซียน (ASEAN Context)</option>
+                            </select>
+                            <i class="fas fa-chevron-down select-chevron"></i>
+                        </div>
+                    </div>
+
+                    <!-- Filter 3: Data Quality -->
+                    <div class="sidebar-filter-item">
+                        <label class="sidebar-filter-label" for="global-quality-filter">
+                            <i class="fas fa-shield-halved"></i>
+                            <span>คุณภาพข้อมูล (Quality)</span>
+                        </label>
+                        <div class="sidebar-select-wrap">
+                            <select id="global-quality-filter" class="sidebar-select" onchange="applyGlobalFilters()">
+                                <option value="all" selected>ข้อมูลทั้งหมด (Show All)</option>
+                                <option value="validated">เฉพาะแถวที่ตรวจสอบแล้ว (Validated Only)</option>
+                            </select>
+                            <i class="fas fa-chevron-down select-chevron"></i>
+                        </div>
+                    </div>
+
+                    <!-- Action / Reset Button -->
+                    <div class="sidebar-filter-item" style="margin-top: 6px;">
+                        <button class="reset-global-btn sidebar-reset-btn" id="resetGlobalBtn" onclick="resetGlobalFilters()">
+                            <i class="fas fa-rotate-left"></i> รีเซ็ตตัวกรองรวม
+                        </button>
+                    </div>
                 </div>
 
-                <div class="filter-pill">
-                    <i class="fas fa-shield-halved"></i>
-                    <label>คุณภาพข้อมูล (Quality):</label>
-                    <select id="global-quality-filter" onchange="applyGlobalFilters()">
-                        <option value="all" selected>ข้อมูลทั้งหมด (Show All)</option>
-                        <option value="validated">เฉพาะแถวที่ตรวจสอบแล้ว (Validated Only)</option>
-                    </select>
+                <!-- Real-time Active Indicator Card -->
+                <div class="sidebar-info-card">
+                    <div class="sidebar-info-title">
+                        <i class="fas fa-bolt" style="color: #F39C12;"></i>
+                        <span>โหมดโต้ตอบแบบเรียลไทม์</span>
+                    </div>
+                    <p class="sidebar-info-text">
+                        เมื่อเปลี่ยนตัวกรอง ข้อมูลทุกแท็บ (KPIs, กราฟ, แผนที่, ตาราง) จะปรับเปลี่ยนสถิติสัมพันธ์กันทันที
+                    </p>
                 </div>
-            </div>
+            </aside>
 
-            <div class="active-filter-indicator">
-                <button class="reset-global-btn" id="resetGlobalBtn" onclick="resetGlobalFilters()">
-                    <i class="fas fa-rotate-left"></i> รีเซ็ตตัวกรองรวม
-                </button>
-            </div>
-        </div>
-
-        <!-- Master Header & Overarching Problem Statement (handoff_kp3 Section 0) -->
-        <header class="master-header">
+            <!-- Main Content Area -->
+            <div class="dashboard-main-content">
+                <!-- Master Header & Overarching Problem Statement (handoff_kp3 Section 0) -->
+                <header class="master-header">
             <div class="brand-row">
                 <div class="brand-logo">
                     <i class="fas fa-shield-halved"></i>
@@ -699,7 +742,9 @@
             <p>2. <strong>Bidirectional Cross-Filtering:</strong> คลิกองค์ประกอบบนกราฟเพื่อกรองข้อมูลในกราฟอื่นอย่างสอดคล้อง พร้อมแสดง Active Focus State และปุ่มรีเซ็ต</p>
             <p>3. <strong>Data Sources:</strong> AFNC Thailand (17,726 ข่าว), ACSC Thailand (381,390 คดี, ฿18.18B), AI Incident Database (1,775 เคสโลก), Freedom on the Net 2024 (Freedom House 71 ประเทศ)</p>
         </footer>
-    </div>
+            </div> <!-- End .dashboard-main-content -->
+        </div> <!-- End .dashboard-layout -->
+    </div> <!-- End .app-container -->
 
     <!-- Data & Application Logic Scripts -->
     <script src="data.js"></script>
